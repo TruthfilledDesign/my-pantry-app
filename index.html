@@ -3,117 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Home Pantry 🌿</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <title>Kitchen HQ 🌿</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #fdfaf5;
-            --card: #ffffff;
-            --primary: #6b8e23; /* Sage Green */
-            --accent: #d4a373; /* Warm Tan */
-            --text: #4a4a4a;
-            --low: #e63946;
+            --primary: #6b8e23; --bg: #f8faf9; --card: #ffffff; --text: #2d3436;
         }
-        body { font-family: 'Quicksand', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 450px; }
-        h1 { color: var(--primary); font-weight: 600; text-align: center; }
+        /* Color Palettes */
+        .theme-green { --primary: #6b8e23; --bg: #f8faf9; }
+        .theme-orange { --primary: #e67e22; --bg: #fffaf5; }
+        .theme-blue { --primary: #3498db; --bg: #f5faff; }
+        .theme-rose { --primary: #e84393; --bg: #fff5f8; }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; transition: 0.3s; }
+        .container { max-width: 500px; margin: auto; padding: 20px; }
         
-        /* Low Stock Alert */
-        .alert-box { background: #fceceb; border-left: 4px solid var(--low); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .glass-card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.05); margin-bottom: 15px; cursor: pointer; }
         
-        /* Item Cards */
-        .item-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #f1f1f1; }
-        .item-info b { display: block; font-size: 1.1rem; }
-        .item-info span { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .section-label { font-weight: 700; font-size: 1.2rem; margin: 25px 0 15px; color: var(--primary); display: flex; justify-content: space-between; }
         
-        /* Controls */
-        .controls { display: flex; align-items: center; gap: 10px; }
-        .btn-qty { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 18px; color: var(--primary); transition: 0.2s; }
-        .btn-qty:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        .qty-display { font-weight: 600; min-width: 20px; text-align: center; }
-        
-        /* Form */
-        .add-section { background: #f1f3f0; padding: 20px; border-radius: 20px; margin-top: 30px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; }
-        .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .item-main { display: flex; justify-content: space-between; align-items: center; }
+        .item-details { font-size: 0.85rem; color: #7f8c8d; margin-top: 8px; display: none; border-top: 1px solid #eee; padding-top: 8px; }
+        .item-details.active { display: block; }
+
+        .badge { background: #f1f3f0; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .low-stock { border-left: 5px solid #ff7675; }
+
+        /* Floating Add Button & Settings Button */
+        .fab { position: fixed; bottom: 30px; right: 30px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 30px; border: none; font-size: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer; }
+        .settings-btn { background: none; border: none; font-size: 24px; cursor: pointer; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 80vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; font-family: inherit; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; }
+        .btn-main { background: var(--primary); color: white; }
     </style>
 </head>
-<body>
+<body class="theme-green">
 
-<div class="app-container">
-    <h1>Our Kitchen 🌿</h1>
-    
-    <div id="alertArea"></div>
-    <div id="itemList"></div>
+<div class="container">
+    <div class="header">
+        <h1>Kitchen HQ</h1>
+        <button class="settings-btn" onclick="toggleModal('settingsModal')">⚙️</button>
+    </div>
 
-    <div class="add-section">
-        <h3 style="margin-top:0">Add New Item</h3>
-        <input type="text" id="name" placeholder="Item Name (e.g., Avocado)">
-        <select id="location">
-            <option value="Pantry">Pantry</option>
-            <option value="Fridge">Fridge</option>
-        </select>
-        <input type="number" id="qty" placeholder="Starting Quantity">
-        <button class="btn-submit" onclick="addItem()">Add to Inventory</button>
+    <div id="inventoryDisplay"></div>
+</div>
+
+<div id="itemModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Add Item</h2>
+        <input type="text" id="itemName" placeholder="Item Name (e.g. Flour)">
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="itemQty" placeholder="Qty">
+            <input type="text" id="itemUnit" placeholder="Unit (bag, can, oz)">
+        </div>
+        <select id="itemSection"></select>
+        <input type="text" id="newSection" placeholder="Or type a new section name...">
+        <input type="text" id="itemPrice" placeholder="Purchase Price (Optional)">
+        <input type="date" id="itemDate">
+        <textarea id="itemComments" placeholder="Comments (Optional)"></textarea>
+        <div class="btn-group">
+            <button class="btn" onclick="toggleModal('itemModal')">Cancel</button>
+            <button class="btn btn-main" onclick="saveItem()">Save Item</button>
+        </div>
     </div>
 </div>
 
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <h2>Settings</h2>
+        <label>App Theme</label>
+        <select onchange="changeTheme(this.value)">
+            <option value="theme-green">Sage Green</option>
+            <option value="theme-orange">Sunset Orange</option>
+            <option value="theme-blue">Ocean Blue</option>
+            <option value="theme-rose">Desert Rose</option>
+        </select>
+        <button class="btn btn-main" style="margin-top:20px" onclick="toggleModal('settingsModal')">Close</button>
+    </div>
+</div>
+
+<button class="fab" onclick="showAddModal()">+</button>
+
 <script>
-    let inventory = JSON.parse(localStorage.getItem('homePantry')) || [];
+    let inventory = JSON.parse(localStorage.getItem('kitchenData')) || [];
+    let sections = JSON.parse(localStorage.getItem('kitchenSections')) || ["Fridge", "Pantry", "Drinks"];
+    let editingIndex = null;
 
     function render() {
-        const list = document.getElementById('itemList');
-        const alertArea = document.getElementById('alertArea');
-        list.innerHTML = '';
-        alertArea.innerHTML = '';
-        
-        let lowItems = inventory.filter(i => i.qty <= 1);
-        if(lowItems.length > 0) {
-            alertArea.innerHTML = `<div class="alert-box"><b>Restock Soon:</b> ${lowItems.map(i => i.name).join(', ')}</div>`;
-        }
+        const display = document.getElementById('inventoryDisplay');
+        display.innerHTML = '';
 
-        inventory.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <div class="item-info">
-                    <span>${item.location}</span>
-                    <b>${item.name}</b>
-                </div>
-                <div class="controls">
-                    <button class="btn-qty" onclick="changeQty(${index}, -1)">-</button>
-                    <span class="qty-display">${item.qty}</span>
-                    <button class="btn-qty" onclick="changeQty(${index}, 1)">+</button>
-                    <button onclick="deleteItem(${index})" style="background:none; border:none; cursor:pointer; margin-left:10px;">🗑️</button>
-                </div>
-            `;
-            list.appendChild(card);
+        sections.forEach(section => {
+            const sectionItems = inventory.filter(i => i.section === section);
+            if (sectionItems.length === 0 && section !== "Fridge") return;
+
+            const sectionDiv = document.createElement('div');
+            sectionDiv.innerHTML = `<div class="section-label">${section} <span>${sectionItems.length}</span></div>`;
+            
+            sectionItems.forEach(item => {
+                const idx = inventory.indexOf(item);
+                const card = document.createElement('div');
+                card.className = `glass-card ${item.qty <= 1 ? 'low-stock' : ''}`;
+                card.onclick = (e) => toggleDetails(e, idx);
+                card.innerHTML = `
+                    <div class="item-main">
+                        <strong>${item.name}</strong>
+                        <span class="badge">${item.qty} ${item.unit}</span>
+                    </div>
+                    <div id="details-${idx}" class="item-details">
+                        <p>💰 Price: ${item.price || 'N/A'} | 📅 Date: ${item.date || 'N/A'}</p>
+                        <p>💬 ${item.comments || 'No comments'}</p>
+                        <div class="btn-group">
+                            <button class="btn" onclick="adjustQty(${idx}, -1)">-1</button>
+                            <button class="btn" onclick="adjustQty(${idx}, 1)">+1</button>
+                            <button class="btn" onclick="deleteItem(${idx})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                sectionDiv.appendChild(card);
+            });
+            display.appendChild(sectionDiv);
         });
-        localStorage.setItem('homePantry', JSON.stringify(inventory));
+        localStorage.setItem('kitchenData', JSON.stringify(inventory));
+        localStorage.setItem('kitchenSections', JSON.stringify(sections));
     }
 
-    function addItem() {
-        const name = document.getElementById('name').value;
-        const location = document.getElementById('location').value;
-        const qty = parseInt(document.getElementById('qty').value);
-        if(name && !isNaN(qty)) {
-            inventory.push({ name, location, qty });
-            render();
-            document.getElementById('name').value = '';
-            document.getElementById('qty').value = '';
+    function toggleModal(id) {
+        const m = document.getElementById(id);
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        populateSectionDropdown();
+    }
+
+    function populateSectionDropdown() {
+        const select = document.getElementById('itemSection');
+        select.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function showAddModal() {
+        editingIndex = null;
+        document.getElementById('modalTitle').innerText = "Add Item";
+        document.getElementById('itemName').value = '';
+        toggleModal('itemModal');
+    }
+
+    function saveItem() {
+        const name = document.getElementById('itemName').value;
+        const qty = parseFloat(document.getElementById('itemQty').value);
+        const unit = document.getElementById('itemUnit').value;
+        const price = document.getElementById('itemPrice').value;
+        const date = document.getElementById('itemDate').value;
+        const comments = document.getElementById('itemComments').value;
+        let section = document.getElementById('itemSection').value;
+        const customSec = document.getElementById('newSection').value;
+
+        if (customSec) {
+            if (!sections.includes(customSec)) sections.push(customSec);
+            section = customSec;
         }
+
+        const itemData = { name, qty, unit, section, price, date, comments };
+        
+        inventory.push(itemData);
+        render();
+        toggleModal('itemModal');
     }
 
-    function changeQty(index, amt) {
-        inventory[index].qty = Math.max(0, inventory[index].qty + amt);
+    function toggleDetails(e, idx) {
+        if(e.target.tagName === 'BUTTON') return;
+        document.getElementById(`details-${idx}`).classList.toggle('active');
+    }
+
+    function adjustQty(idx, amt) {
+        inventory[idx].qty = Math.max(0, inventory[idx].qty + amt);
         render();
     }
 
-    function deleteItem(index) {
-        inventory.splice(index, 1);
+    function deleteItem(idx) {
+        inventory.splice(idx, 1);
         render();
     }
 
+    function changeTheme(theme) {
+        document.body.className = theme;
+        localStorage.setItem('kitchenTheme', theme);
+    }
+
+    // Load theme
+    document.body.className = localStorage.getItem('kitchenTheme') || 'theme-green';
     render();
 </script>
 </body>
