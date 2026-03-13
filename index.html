@@ -10,87 +10,87 @@
             --bg: #EAE4D9; --panel: #DCD3C1; --card: #FDFBFA;
             --text-main: #3E3A37; --text-soft: #7C7874; --radius: 20px;
             --low-alert: #B68576;
+            /* Planner Palette */
+            --planner-bg: #CFD4CD; --planner-panel: #B8BEB6; --planner-accent: #5E6B5E;
         }
-        .theme-sage { --pop: #A8B29C; --header-text: #2D3A2D; --planner-bg: #CFD4CD; }
-        .theme-burgundy { --pop: #B68576; --header-text: #FDFBFA; --planner-bg: #D9C5BF; }
+        .theme-sage { --pop: #A8B29C; --header-text: #2D3A2D; }
+        .theme-burgundy { --pop: #B68576; --header-text: #FDFBFA; }
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; }
-        h1, h2 { font-family: 'Playfair Display', serif; margin: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; transition: background 0.3s; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; margin: 0; }
 
-        /* --- THE HARVEST SPOON LOGO --- */
-        .logo-wrap { display: flex; flex-direction: column; align-items: center; margin: 30px 0 20px; }
-        .logo-emblem { 
-            width: 60px; height: 60px; background: var(--pop); border-radius: 50%; 
-            position: relative; display: flex; align-items: center; justify-content: center; 
-        }
-        .logo-emblem::after { /* Spoon Bowl */
-            content: ''; position: absolute; width: 14px; height: 20px; 
-            background: var(--card); border-radius: 50% 50% 40% 40%; transform: translateY(8px);
-        }
-        .logo-emblem::before { /* Spoon Handle */
-            content: ''; position: absolute; width: 4px; height: 30px; 
-            background: var(--card); border-radius: 2px; transform: translateY(-8px);
-        }
-        .logo-leaf { 
-            position: absolute; width: 10px; height: 14px; background: var(--bg); 
-            border-radius: 0 10px 0 10px; top: 18px; right: 14px; transform: rotate(20deg);
-        }
-
-        /* Layout */
         .app-container { width: 100%; max-width: 480px; min-height: 100vh; margin: 0 auto; position: relative; }
-        .header-bg { padding: 15px 20px; display: flex; align-items: center; }
-        .menu-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); }
+
+        /* --- LOGO --- */
+        .logo-wrap { display: flex; flex-direction: column; align-items: center; margin: 20px 0 10px; }
+        .logo-emblem { width: 50px; height: 50px; background: var(--pop); border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .logo-emblem::after { content: ''; position: absolute; width: 12px; height: 16px; background: var(--card); border-radius: 50% 50% 40% 40%; transform: translateY(6px); }
+        .logo-emblem::before { content: ''; position: absolute; width: 3px; height: 24px; background: var(--card); border-radius: 2px; transform: translateY(-8px); }
+        .logo-leaf { position: absolute; width: 8px; height: 12px; background: var(--bg); border-radius: 0 10px 0 10px; top: 15px; right: 12px; transform: rotate(20deg); }
+
+        /* Navigation */
+        .header-bg { padding: 15px 20px; position: relative; z-index: 10; }
+        .menu-trigger { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); }
         
-        .side-panel { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: var(--card); z-index: 1000; padding: 40px 20px; transition: 0.3s; box-shadow: 10px 0 40px rgba(0,0,0,0.1); }
+        /* Sidebar (REVERTED TO ORIGINAL STATE) */
+        .side-panel { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: var(--card); z-index: 1000; padding: 25px 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 10px 0 40px rgba(0,0,0,0.08); overflow-y: auto; }
         .side-panel.open { left: 0; }
-        .overlay { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.2); z-index: 999; }
+        .overlay { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(4px); z-index: 999; }
+
+        .accordion-btn { width: 100%; text-align: left; background: none; border: none; font-weight: 700; padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .accordion-content { display: none; padding: 10px 0; }
+        .accordion-content.active { display: block; }
+        
+        .circle-x { position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         /* Grid */
         .content { padding: 0 20px 100px; }
         .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .section-card { background: var(--panel); padding: 15px; border-radius: var(--radius); text-align: center; cursor: pointer; }
-        .section-card .emoji { font-size: 24px; display: block; margin-bottom: 5px; }
-
-        /* Items */
-        .item-row { 
-            background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-        }
-        .item-info b { display: block; font-size: 16px; }
-        .item-info small { color: var(--text-soft); font-size: 11px; font-weight: 600; }
+        
+        /* Planner */
+        .planner-mode { background-color: var(--planner-bg) !important; }
+        .planner-drop { width: 100%; background: var(--planner-panel); border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-bottom: 8px; text-align: left; display: flex; justify-content: space-between; cursor: pointer; }
+        .day-box { background: var(--card); border-radius: 15px; padding: 12px; margin-bottom: 10px; }
+        .meal-slot { padding: 10px; background: #f4f6f5; border-radius: 10px; margin-top: 5px; cursor: pointer; border-left: 4px solid var(--planner-accent); }
 
         /* Modals */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:2000; align-items:center; justify-content:center; }
-        .modal-content { background: var(--card); width: 85%; max-width: 350px; padding: 25px; border-radius: 25px; position: relative; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0; border-radius: 12px; border: 1px solid #ddd; background: #f9f9f9; font-family: inherit; box-sizing: border-box; }
-        .btn-save { background: var(--text-main); color: white; width: 100%; padding: 15px; border: none; border-radius: 50px; font-weight: 700; margin-top: 15px; cursor: pointer; }
-        .circle-x { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; color: var(--text-soft); }
+        .modal-content { background: var(--card); width: 88%; max-width: 360px; padding: 25px; border-radius: 28px; max-height: 85vh; overflow-y: auto; position: relative; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd; background: #f9f9f9; font-family: inherit; box-sizing: border-box; }
+        .btn-save { background: var(--text-main); color: white; width: 100%; padding: 14px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--text-main); border-radius: 20px; color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--text-main); border-radius: 20px; color: white; border: none; font-size: 30px; cursor: pointer; z-index: 800; }
     </style>
 </head>
 <body class="theme-sage">
 
-<div class="app-container">
+<div class="app-container" id="app">
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-    
+
     <div class="side-panel" id="sidePanel">
         <div class="circle-x" onclick="toggleMenu()">×</div>
-        <h2 style="margin-top:20px">Menu</h2>
-        <div onclick="goHome()" style="padding:15px 0; cursor:pointer; font-weight:700;">🏠 Home</div>
-        <div onclick="alert('Planner Fix Loading...')" style="padding:15px 0; cursor:pointer; font-weight:700;">🗓️ Menu Planner</div>
+        <h2 style="margin-top:30px">Menu</h2>
+        <div onclick="goHome()" style="padding:15px 0; border-bottom:1px solid #eee; cursor:pointer; font-weight:700;">🏠 Home</div>
+        <div onclick="openPlanner()" style="padding:15px 0; border-bottom:1px solid #eee; cursor:pointer; font-weight:700;">🗓️ Menu Planner</div>
+        
+        <button class="accordion-btn" onclick="toggleAccordion('lowAcc')">📋 Running Low <span>▾</span></button>
+        <div id="lowAcc" class="accordion-content">
+            <div id="lowItems"></div>
+        </div>
+
+        <button class="accordion-btn" onclick="toggleAccordion('shopAcc')">🛒 Shopping List <span>▾</span></button>
+        <div id="shopAcc" class="accordion-content">
+            <div id="shopItems"></div>
+        </div>
+
         <div style="margin-top:20px">
             <label style="font-size:10px; font-weight:800; color:var(--text-soft)">STYLE</label>
-            <select onchange="document.body.className = this.value">
-                <option value="theme-sage">Sage</option>
-                <option value="theme-burgundy">Burgundy</option>
-            </select>
+            <select id="themeSelect" onchange="changeTheme(this.value)"><option value="theme-sage">Sage</option><option value="theme-burgundy">Burgundy</option></select>
         </div>
     </div>
 
-    <div class="header-bg">
-        <button class="menu-btn" onclick="toggleMenu()">☰</button>
-    </div>
+    <div class="header-bg"><button class="menu-trigger" onclick="toggleMenu()">☰</button></div>
 
     <div class="logo-wrap">
         <div class="logo-emblem"><div class="logo-leaf"></div></div>
@@ -99,54 +99,71 @@
 
     <div class="content">
         <div class="section-grid" id="mainGrid"></div>
-        
-        <div id="sectionView" style="display:none; margin-top:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 id="viewTitle">Fridge</h2>
-                <div class="circle-x" style="position:static" onclick="goHome()">×</div>
-            </div>
+
+        <div id="sectionView" style="display:none; position:relative;">
+            <div class="circle-x" style="top:0; right:0;" onclick="goHome()">×</div>
+            <h2 id="viewTitle" style="margin-bottom:20px;">Section</h2>
             <div id="itemList"></div>
+        </div>
+
+        <div id="plannerView" style="display:none; position:relative;">
+            <div class="circle-x" style="top:0; right:0;" onclick="goHome()">×</div>
+            <h2 style="margin-bottom:20px;">Menu Planner</h2>
+            <div id="plannerContent"></div>
         </div>
     </div>
 
-    <button class="fab" id="addItemBtn" onclick="openModal()">+</button>
+    <button class="fab" onclick="openModal()">+</button>
+</div>
+
+<div id="mealModal" class="modal">
+    <div class="modal-content">
+        <div class="circle-x" onclick="closeMealModal()">×</div>
+        <h2 id="mealHead">Meal Details</h2>
+        <input type="text" id="mealDish" placeholder="Dish Name">
+        <textarea id="mealNotes" placeholder="Notes..." rows="3"></textarea>
+        <button class="btn-save" onclick="saveMeal()">Save Plan</button>
+        <button class="btn-save" style="background:#888;" onclick="copyMeal()">Copy</button>
+        <button id="pasteBtn" class="btn-save" style="display:none; background:var(--pop);" onclick="pasteMeal()">Paste Clipboard</button>
+    </div>
 </div>
 
 <div id="itemModal" class="modal">
     <div class="modal-content">
         <div class="circle-x" onclick="closeModal()">×</div>
-        <h2 id="modalHead">Add Item</h2>
-        <input type="text" id="itemName" placeholder="Item Name">
+        <h2 id="itemModalHead">Add Item</h2>
+        <input type="text" id="itemName" placeholder="Name">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <input type="number" id="itemQty" placeholder="Qty">
             <input type="text" id="itemUnit" placeholder="Unit">
         </div>
         <select id="itemSec"></select>
-        <input type="text" id="newSec" placeholder="Or new category...">
         <div style="display:flex; gap:15px; background:#f1efea; padding:10px; border-radius:12px; margin:10px 0;">
             <label style="font-size:12px;"><input type="checkbox" id="checkLow"> Low</label>
             <label style="font-size:12px;"><input type="checkbox" id="checkShop"> Shop</label>
         </div>
         <button class="btn-save" onclick="saveItem()">Save Item</button>
-        <button id="delBtn" onclick="deleteItem()" style="display:none; width:100%; background:none; border:none; color:maroon; margin-top:10px; font-size:11px; font-weight:700;">DELETE</button>
+        <button id="delBtn" onclick="deleteItem()" style="display:none; width:100%; background:none; border:none; color:maroon; margin-top:15px; font-weight:700;">DELETE</button>
     </div>
 </div>
 
 <script>
-    // FIX: Standardized key to recover 'missing' items
     let inventory = JSON.parse(localStorage.getItem('wk_inv')) || [];
-    let categories = JSON.parse(localStorage.getItem('wk_sec')) || ["Fridge", "Pantry", "Freezer", "Baking"];
-    let curEditIdx = null;
+    let categories = JSON.parse(localStorage.getItem('wk_sec')) || ["Fridge", "Pantry", "Freezer"];
+    let weekPlans = JSON.parse(localStorage.getItem('wk_plans')) || {};
+    let clipboard = null;
+    let curIdx = null;
 
     function renderHome() {
+        document.getElementById('app').classList.remove('planner-mode');
         document.getElementById('mainGrid').style.display = 'grid';
         document.getElementById('sectionView').style.display = 'none';
+        document.getElementById('plannerView').style.display = 'none';
         const grid = document.getElementById('mainGrid');
         grid.innerHTML = categories.map(c => `
             <div class="section-card" onclick="openSection('${c}')">
-                <span class="emoji">📦</span>
-                <b>${c}</b><br>
-                <small style="font-size:10px; color:var(--text-soft)">${inventory.filter(i=>i.section===c).length} ITEMS</small>
+                <b style="font-size:18px;">${c}</b><br>
+                <small>${inventory.filter(i=>i.section===c).length} ITEMS</small>
             </div>
         `).join('');
     }
@@ -157,83 +174,133 @@
         document.getElementById('viewTitle').innerText = name;
         const list = document.getElementById('itemList');
         list.innerHTML = inventory.filter(i => i.section === name).map(item => {
-            const realIdx = inventory.indexOf(item);
-            return `
-                <div class="item-row" onclick="openModal(${realIdx})">
-                    <div class="item-info">
-                        <b>${item.name}</b>
-                        <small>${item.qty} ${item.unit}</small>
-                        ${item.isLow ? '<span style="color:var(--low-alert); margin-left:10px">LOW</span>' : ''}
-                    </div>
-                    <span>✎</span>
-                </div>
-            `;
+            const idx = inventory.indexOf(item);
+            return `<div class="item-row" style="background:white; padding:15px; border-radius:15px; margin-bottom:10px; display:flex; justify-content:space-between;" onclick="openModal(${idx})">
+                        <div><b>${item.name}</b><br><small style="color:gray">${item.qty} ${item.unit}</small></div>
+                        <span>✎</span>
+                    </div>`;
         }).join('');
     }
 
+    /* Planner */
+    function openPlanner() {
+        if(document.getElementById('sidePanel').classList.contains('open')) toggleMenu();
+        document.getElementById('app').classList.add('planner-mode');
+        document.getElementById('mainGrid').style.display = 'none';
+        document.getElementById('sectionView').style.display = 'none';
+        document.getElementById('plannerView').style.display = 'block';
+        renderPlanner();
+    }
+
+    function renderPlanner() {
+        const cont = document.getElementById('plannerContent');
+        cont.innerHTML = '';
+        const weeks = ["Current Week", "Next Week"];
+        weeks.forEach(w => {
+            const drop = document.createElement('div');
+            drop.className = 'planner-drop';
+            drop.onclick = () => drop.nextElementSibling.classList.toggle('active');
+            drop.innerHTML = `<span>${w}</span><span>▾</span>`;
+            const inner = document.createElement('div');
+            inner.className = 'accordion-content';
+            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(day => {
+                const key = `${w}-${day}`;
+                const data = weekPlans[key] || {};
+                const box = document.createElement('div');
+                box.className = 'day-box';
+                box.innerHTML = `<h4>${day}</h4>`;
+                ["Lunch", "Dinner"].forEach(type => {
+                    const meal = data[type] || { dish: '—' };
+                    const slot = document.createElement('div');
+                    slot.className = 'meal-slot';
+                    slot.onclick = () => openMealModal(key, type);
+                    slot.innerHTML = `<b>${type}:</b> ${meal.dish}`;
+                    box.appendChild(slot);
+                });
+                inner.appendChild(box);
+            });
+            cont.appendChild(drop); cont.appendChild(inner);
+        });
+    }
+
+    function openMealModal(key, type) {
+        window.activeMealKey = key; window.activeMealType = type;
+        const data = (weekPlans[key] && weekPlans[key][type]) || { dish: '', notes: '' };
+        document.getElementById('mealDish').value = data.dish;
+        document.getElementById('mealNotes').value = data.notes;
+        document.getElementById('pasteBtn').style.display = clipboard ? 'block' : 'none';
+        document.getElementById('mealModal').style.display = 'flex';
+    }
+
+    function saveMeal() {
+        if(!weekPlans[window.activeMealKey]) weekPlans[window.activeMealKey] = {};
+        weekPlans[window.activeMealKey][window.activeMealType] = {
+            dish: document.getElementById('mealDish').value,
+            notes: document.getElementById('mealNotes').value
+        };
+        localStorage.setItem('wk_plans', JSON.stringify(weekPlans));
+        closeMealModal(); renderPlanner();
+    }
+
+    function copyMeal() {
+        clipboard = { dish: document.getElementById('mealDish').value, notes: document.getElementById('mealNotes').value };
+        alert("Copied!");
+    }
+
+    function pasteMeal() {
+        document.getElementById('mealDish').value = clipboard.dish;
+        document.getElementById('mealNotes').value = clipboard.notes;
+        saveMeal();
+    }
+
+    /* Standard Modals */
     function openModal(idx = null) {
-        curEditIdx = idx;
-        const modal = document.getElementById('itemModal');
-        const head = document.getElementById('modalHead');
-        const del = document.getElementById('delBtn');
-        
+        curIdx = idx;
         document.getElementById('itemSec').innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        
         if(idx !== null) {
             const i = inventory[idx];
-            head.innerText = "Edit Item";
             document.getElementById('itemName').value = i.name;
             document.getElementById('itemQty').value = i.qty;
             document.getElementById('itemUnit').value = i.unit;
             document.getElementById('itemSec').value = i.section;
             document.getElementById('checkLow').checked = i.isLow;
             document.getElementById('checkShop').checked = i.onShop;
-            del.style.display = 'block';
+            document.getElementById('delBtn').style.display = 'block';
         } else {
-            head.innerText = "Add Item";
             document.querySelectorAll('#itemModal input').forEach(el => { if(el.type !== 'checkbox') el.value = ''; });
-            document.getElementById('checkLow').checked = false;
-            document.getElementById('checkShop').checked = false;
-            del.style.display = 'none';
+            document.getElementById('delBtn').style.display = 'none';
         }
-        modal.style.display = 'flex';
+        document.getElementById('itemModal').style.display = 'flex';
     }
 
     function saveItem() {
-        const ns = document.getElementById('newSec').value;
-        const sec = ns || document.getElementById('itemSec').value;
-        if(ns && !categories.includes(ns)) categories.push(ns);
-
         const data = {
             name: document.getElementById('itemName').value,
             qty: document.getElementById('itemQty').value,
             unit: document.getElementById('itemUnit').value,
-            section: sec,
+            section: document.getElementById('itemSec').value,
             isLow: document.getElementById('checkLow').checked,
             onShop: document.getElementById('checkShop').checked
         };
-
-        if(curEditIdx !== null) inventory[curEditIdx] = data;
+        if(curIdx !== null) inventory[curIdx] = data;
         else inventory.push(data);
-
         localStorage.setItem('wk_inv', JSON.stringify(inventory));
-        localStorage.setItem('wk_sec', JSON.stringify(categories));
-        closeModal();
-        renderHome();
-        if(document.getElementById('sectionView').style.display === 'block') openSection(sec);
+        closeModal(); renderHome();
     }
 
-    function deleteItem() {
-        inventory.splice(curEditIdx, 1);
-        localStorage.setItem('wk_inv', JSON.stringify(inventory));
-        closeModal();
-        renderHome();
+    function deleteItem() { inventory.splice(curIdx, 1); localStorage.setItem('wk_inv', JSON.stringify(inventory)); closeModal(); renderHome(); }
+    function changeTheme(t) { document.body.className = t; localStorage.setItem('wk_theme', t); }
+    function toggleMenu() { document.getElementById('sidePanel').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidePanel').classList.contains('open') ? 'block' : 'none'; renderSidebar(); }
+    function toggleAccordion(id) { document.getElementById(id).classList.toggle('active'); }
+    function renderSidebar() {
+        document.getElementById('lowItems').innerHTML = inventory.filter(i=>i.isLow).map(i => `<div style="padding:5px 0;">• ${i.name}</div>`).join('');
+        document.getElementById('shopItems').innerHTML = inventory.filter(i=>i.onShop).map(i => `<div style="padding:5px 0;">• ${i.name}</div>`).join('');
     }
-
     function goHome() { renderHome(); }
     function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
-    function toggleMenu() { document.getElementById('sidePanel').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidePanel').classList.contains('open') ? 'block' : 'none'; }
+    function closeMealModal() { document.getElementById('mealModal').style.display = 'none'; }
 
+    document.body.className = localStorage.getItem('wk_theme') || 'theme-sage';
     renderHome();
 </script>
 </body>
