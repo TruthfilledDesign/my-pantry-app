@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Home Pantry 🌿</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdfaf5;
+            --card: #ffffff;
+            --primary: #6b8e23; /* Sage Green */
+            --accent: #d4a373; /* Warm Tan */
+            --text: #4a4a4a;
+            --low: #e63946;
+        }
+        body { font-family: 'Quicksand', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 450px; }
+        h1 { color: var(--primary); font-weight: 600; text-align: center; }
+        
+        /* Low Stock Alert */
+        .alert-box { background: #fceceb; border-left: 4px solid var(--low); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; }
+        
+        /* Item Cards */
+        .item-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #f1f1f1; }
+        .item-info b { display: block; font-size: 1.1rem; }
+        .item-info span { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Controls */
+        .controls { display: flex; align-items: center; gap: 10px; }
+        .btn-qty { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 18px; color: var(--primary); transition: 0.2s; }
+        .btn-qty:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .qty-display { font-weight: 600; min-width: 20px; text-align: center; }
+        
+        /* Form */
+        .add-section { background: #f1f3f0; padding: 20px; border-radius: 20px; margin-top: 30px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; }
+        .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Our Kitchen 🌿</h1>
+    
+    <div id="alertArea"></div>
+    <div id="itemList"></div>
+
+    <div class="add-section">
+        <h3 style="margin-top:0">Add New Item</h3>
+        <input type="text" id="name" placeholder="Item Name (e.g., Avocado)">
+        <select id="location">
+            <option value="Pantry">Pantry</option>
+            <option value="Fridge">Fridge</option>
+        </select>
+        <input type="number" id="qty" placeholder="Starting Quantity">
+        <button class="btn-submit" onclick="addItem()">Add to Inventory</button>
+    </div>
+</div>
+
+<script>
+    let inventory = JSON.parse(localStorage.getItem('homePantry')) || [];
+
+    function render() {
+        const list = document.getElementById('itemList');
+        const alertArea = document.getElementById('alertArea');
+        list.innerHTML = '';
+        alertArea.innerHTML = '';
+        
+        let lowItems = inventory.filter(i => i.qty <= 1);
+        if(lowItems.length > 0) {
+            alertArea.innerHTML = `<div class="alert-box"><b>Restock Soon:</b> ${lowItems.map(i => i.name).join(', ')}</div>`;
+        }
+
+        inventory.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-info">
+                    <span>${item.location}</span>
+                    <b>${item.name}</b>
+                </div>
+                <div class="controls">
+                    <button class="btn-qty" onclick="changeQty(${index}, -1)">-</button>
+                    <span class="qty-display">${item.qty}</span>
+                    <button class="btn-qty" onclick="changeQty(${index}, 1)">+</button>
+                    <button onclick="deleteItem(${index})" style="background:none; border:none; cursor:pointer; margin-left:10px;">🗑️</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+        localStorage.setItem('homePantry', JSON.stringify(inventory));
+    }
+
+    function addItem() {
+        const name = document.getElementById('name').value;
+        const location = document.getElementById('location').value;
+        const qty = parseInt(document.getElementById('qty').value);
+        if(name && !isNaN(qty)) {
+            inventory.push({ name, location, qty });
+            render();
+            document.getElementById('name').value = '';
+            document.getElementById('qty').value = '';
+        }
+    }
+
+    function changeQty(index, amt) {
+        inventory[index].qty = Math.max(0, inventory[index].qty + amt);
+        render();
+    }
+
+    function deleteItem(index) {
+        inventory.splice(index, 1);
+        render();
+    }
+
+    render();
+</script>
+</body>
+</html>
