@@ -7,109 +7,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #F8F7F4; /* Soft Oatmeal */
-            --card: #FFFFFF;
-            --text-main: #2D2926;
-            --text-soft: #7C7874;
-            --primary: #4A4A4A; /* Neutral Charcoal */
-            --accent: #D9D2C5; /* Warm Sand */
-            --radius: 24px;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            --bg: #F8F7F4; --card: #FFFFFF; --text-main: #2D2926; --text-soft: #7C7874;
+            --primary: #4A4A4A; --accent: #D9D2C5; --radius: 24px; --shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         }
         
-        /* Dynamic Theme Overrides */
-        .theme-sage { --accent: #D1D7C4; --primary: #525B44; }
-        .theme-burgundy { --accent: #E2D1D1; --primary: #6B1D1D; }
-        .theme-navy { --accent: #D1D7E2; --primary: #2C3E50; }
+        /* Themed Pops of Color */
+        .theme-sage { --accent: #D1D7C4; --primary: #525B44; --pop: #8ba888; }
+        .theme-burgundy { --accent: #E2D1D1; --primary: #6B1D1D; --pop: #a64444; }
+        .theme-navy { --accent: #D1D7E2; --primary: #2C3E50; --pop: #5d7ba3; }
 
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text-main); 
-            margin: 0; padding: 0;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
 
-        /* Minimalist Header */
-        header { 
-            padding: 40px 24px 20px; 
-            background: var(--bg);
-            display: flex; align-items: center; justify-content: space-between;
+        /* Dynamic Header with Color Pop */
+        .header-bg { 
+            background: var(--pop); padding: 50px 24px 30px; border-radius: 0 0 40px 40px; 
+            color: white; transition: 0.4s; position: relative;
         }
         .menu-trigger {
-            background: var(--card); border: none; padding: 12px;
-            border-radius: 14px; box-shadow: var(--shadow); cursor: pointer;
+            position: absolute; top: 20px; left: 24px; background: rgba(255,255,255,0.2); 
+            border: none; padding: 10px; border-radius: 14px; cursor: pointer; color: white;
         }
 
-        /* Sidebar & Overlay */
-        .side-panel { 
-            position: fixed; top: 0; left: -100%; width: 80%; height: 100%; 
-            background: var(--card); z-index: 1000; padding: 40px 24px;
-            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        /* Sidebar */
+        .side-panel { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: var(--card); z-index: 1000; padding: 40px 24px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .side-panel.open { left: 0; }
-        .overlay { 
-            display:none; position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: rgba(45, 41, 38, 0.1); backdrop-filter: blur(8px); z-index: 999; 
-        }
+        .overlay { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(8px); z-index: 999; }
 
-        /* Dashboard View */
-        .content { padding: 0 24px 100px; }
-        .welcome-text h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.8px; }
-        .welcome-text p { color: var(--text-soft); margin: 0 0 32px; font-size: 15px; }
-
+        /* Content */
+        .content { padding: 24px; padding-bottom: 100px; }
         .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .section-card {
             background: var(--card); padding: 24px; border-radius: var(--radius);
             box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.02);
-            display: flex; flex-direction: column; align-items: flex-start; transition: 0.2s;
+            display: flex; flex-direction: column; transition: 0.2s;
         }
-        .section-card:active { transform: scale(0.97); background: var(--bg); }
         .section-card .icon-circle { 
-            width: 40px; height: 40px; background: var(--bg); 
-            border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center;
+            width: 44px; height: 44px; background: var(--pop); opacity: 0.8;
+            border-radius: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: white;
         }
-        .section-card span { font-size: 13px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
-        .section-card b { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 4px; }
+        .section-card b { font-size: 18px; font-weight: 700; }
 
-        /* Dynamic Detail View (Slide-up) */
+        /* Detail View */
         .detail-view {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 500; transform: translateY(100%);
-            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding: 60px 24px 24px; box-sizing: border-box;
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding: 40px 24px; box-sizing: border-box; overflow-y: auto;
         }
         .detail-view.active { transform: translateY(0); }
-        .close-btn { 
-            position: absolute; top: 20px; right: 24px; padding: 10px 20px;
-            background: var(--card); border: none; border-radius: 12px; font-weight: 700; font-size: 14px;
-            box-shadow: var(--shadow);
-        }
-
+        .view-actions { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        
         .item-pill {
             background: var(--card); padding: 20px; border-radius: 20px;
-            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow); border-left: 0px solid var(--primary); transition: 0.2s;
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow);
         }
-        .item-pill.low { border-left-width: 6px; border-left-color: #E27D60; }
+        .item-pill.low { border-left: 6px solid #E27D60; }
+        .item-pill.shop { border-left: 6px solid var(--pop); }
 
-        /* Form Styling */
+        /* Forms */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.2); z-index:2000; align-items:center; justify-content:center; }
-        .modal-content { background:white; width:90%; max-width:400px; padding:32px; border-radius:32px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
-        input, select, textarea { 
-            width:100%; padding: 16px; margin: 10px 0; border: 1px solid #EAE9E6; 
-            border-radius: 14px; background: #FBFBFA; font-size: 16px; font-family: inherit; box-sizing: border-box;
-        }
-        .btn-action { 
-            background: var(--primary); color: white; width: 100%; padding: 18px; 
-            border: none; border-radius: 16px; font-weight: 700; font-size: 16px; margin-top: 12px;
-        }
-
-        /* Floating Action Button */
-        .fab {
-            position: fixed; bottom: 40px; right: 24px; width: 64px; height: 64px;
-            background: var(--primary); border-radius: 22px; color: white;
-            border: none; font-size: 30px; box-shadow: 0 12px 24px rgba(0,0,0,0.15); z-index: 800;
-        }
+        .modal-content { background:white; width:92%; max-width:400px; padding:30px; border-radius:32px; max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width:100%; padding: 14px; margin: 8px 0; border: 1px solid #EAE9E6; border-radius: 14px; background: #FBFBFA; font-size: 16px; font-family: inherit; box-sizing: border-box; }
+        .btn-action { background: var(--primary); color: white; width: 100%; padding: 16px; border: none; border-radius: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+        
+        .fab { position: fixed; bottom: 30px; right: 24px; width: 64px; height: 64px; background: var(--primary); border-radius: 22px; color: white; border: none; font-size: 30px; box-shadow: 0 12px 24px rgba(0,0,0,0.15); z-index: 800; }
     </style>
 </head>
 <body class="theme-sage">
@@ -117,41 +77,39 @@
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <div class="side-panel" id="sidePanel">
-    <h2 style="font-weight: 700; font-size: 24px; margin-bottom: 32px;">Settings</h2>
-    
-    <label style="font-size: 13px; font-weight: 700; color: var(--text-soft); text-transform: uppercase;">Tone Selection</label>
-    <select onchange="changeTheme(this.value)" style="background: var(--bg); border: none;">
+    <h2 style="font-weight: 700; margin-bottom: 24px;">Settings</h2>
+    <label style="font-size: 12px; font-weight: 700; color: var(--text-soft); text-transform: uppercase;">Tone Selection</label>
+    <select onchange="changeTheme(this.value)">
         <option value="theme-sage">Soft Sage</option>
         <option value="theme-burgundy">Muted Burgundy</option>
         <option value="theme-navy">Cool Navy</option>
     </select>
 
-    <div style="margin-top: 48px;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            <span style="font-weight: 700;">Shopping List</span>
-        </div>
-        <div id="lowStockSidebar" style="font-size: 15px; color: var(--text-soft); line-height: 1.8;"></div>
+    <div style="margin-top: 40px;">
+        <h3 style="font-size: 18px;">⚠️ Running Low</h3>
+        <div id="runningLowList" style="font-size: 14px; color: var(--text-soft);"></div>
+        
+        <h3 style="font-size: 18px; margin-top: 30px;">🛒 Shopping List</h3>
+        <div id="shoppingListSidebar" style="font-size: 14px; color: var(--text-soft);"></div>
     </div>
 </div>
 
-<header>
-    <button class="menu-trigger" onclick="toggleMenu()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-    </button>
-</header>
+<div class="header-bg">
+    <button class="menu-trigger" onclick="toggleMenu()">☰</button>
+    <h1 style="margin:0; font-size: 28px; font-weight: 700;">Kitchen HQ</h1>
+    <p style="margin: 5px 0 0; opacity: 0.9; font-size: 14px;">Intentional living starts here.</p>
+</div>
 
 <div class="content">
-    <div class="welcome-text">
-        <h1>Kitchen HQ</h1>
-        <p>Managing your inventory with intention.</p>
-    </div>
     <div class="section-grid" id="categoryGrid"></div>
 </div>
 
 <div id="dynamicDetail" class="detail-view">
-    <button class="close-btn" onclick="closeDynamicView()">Close</button>
-    <h2 id="dynamicTitle" style="font-size: 32px; font-weight: 700; margin-bottom: 24px;">Section</h2>
+    <div class="view-actions">
+        <button onclick="closeDynamicView()" style="border:none; background:none; font-weight:700;">← Back</button>
+        <button id="deleteSectionBtn" style="color: #E27D60; border:none; background:none; font-weight:700; display:none;" onclick="deleteCurrentSection()">Delete Section</button>
+    </div>
+    <h2 id="dynamicTitle" style="font-size: 32px; font-weight: 700; margin-bottom: 20px;">Section</h2>
     <div id="dynamicItemList"></div>
 </div>
 
@@ -159,20 +117,31 @@
 
 <div id="itemModal" class="modal">
     <div class="modal-content">
-        <h2 id="modalTitle" style="margin: 0 0 20px; font-weight: 700;">Item Details</h2>
+        <h2 id="modalTitle" style="margin: 0 0 15px; font-weight: 700;">Item Details</h2>
         <input type="text" id="itemName" placeholder="Item Name">
-        <div style="display:flex; gap:12px;">
-            <input type="number" id="itemQty" placeholder="0">
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="itemQty" placeholder="Qty">
             <input type="text" id="itemUnit" placeholder="Unit">
         </div>
         <select id="itemSection"></select>
-        <input type="text" id="newSection" placeholder="Or create a new section...">
-        <textarea id="itemComments" rows="2" placeholder="Additional notes..."></textarea>
-        <label style="display: flex; align-items: center; gap: 12px; padding: 12px 0; font-weight: 500;">
-            <input type="checkbox" id="itemLowManual" style="width: 18px; height: 18px;"> Running Low
-        </label>
+        <input type="text" id="newSection" placeholder="Or new section name...">
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="itemPrice" placeholder="Price">
+            <input type="date" id="itemDate">
+        </div>
+        <textarea id="itemComments" rows="2" placeholder="Notes..."></textarea>
+        
+        <div style="background: #f9f9f9; padding: 12px; border-radius: 12px; margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 500; margin-bottom: 8px;">
+                <input type="checkbox" id="itemLowManual"> Running Low
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 500;">
+                <input type="checkbox" id="itemInShoppingList"> Add to Shopping List
+            </label>
+        </div>
+
         <button class="btn-action" onclick="saveItem()">Save Changes</button>
-        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:16px; color:var(--text-soft); font-weight:600;">Cancel</button>
+        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:12px; color:var(--text-soft);">Cancel</button>
     </div>
 </div>
 
@@ -180,12 +149,12 @@
     let inventory = JSON.parse(localStorage.getItem('kData')) || [];
     let sections = JSON.parse(localStorage.getItem('kSections')) || ["Fridge", "Pantry", "Baking", "Drinks"];
     let currentEditIdx = null;
+    let currentOpenSection = "";
 
     function toggleMenu() {
-        const panel = document.getElementById('sidePanel');
-        panel.classList.toggle('open');
-        document.getElementById('overlay').style.display = panel.classList.contains('open') ? 'block' : 'none';
-        renderLowStockSidebar();
+        document.getElementById('sidePanel').classList.toggle('open');
+        document.getElementById('overlay').style.display = document.getElementById('sidePanel').classList.contains('open') ? 'block' : 'none';
+        renderSidebarLists();
     }
 
     function renderDashboard() {
@@ -196,92 +165,102 @@
             const card = document.createElement('div');
             card.className = 'section-card';
             card.onclick = () => openDynamicView(s);
-            card.innerHTML = `
-                <div class="icon-circle">🏠</div>
-                <span>${count} items</span>
-                <b>${s}</b>
-            `;
+            card.innerHTML = `<div class="icon-circle">✨</div><span>${count} items</span><b>${s}</b>`;
             grid.appendChild(card);
         });
     }
 
     function openDynamicView(section) {
+        currentOpenSection = section;
         document.getElementById('dynamicTitle').innerText = section;
+        document.getElementById('deleteSectionBtn').style.display = 'block';
+        
         const list = document.getElementById('dynamicItemList');
         list.innerHTML = '';
         inventory.forEach((item, idx) => {
             if(item.section !== section) return;
             const pill = document.createElement('div');
-            pill.className = `item-pill ${ (item.qty < 1 || item.isLow) ? 'low' : ''}`;
+            pill.className = `item-pill ${ (item.qty < 1 || item.isLow) ? 'low' : ''} ${item.onShop ? 'shop' : ''}`;
             pill.onclick = () => openEditModal(idx);
-            pill.innerHTML = `
-                <div><b style="font-size: 16px;">${item.name}</b><br><small style="color:var(--text-soft)">${item.qty} ${item.unit}</small></div>
-                <div style="font-weight: 700; color: var(--primary); font-size: 14px;">EDIT</div>
-            `;
+            pill.innerHTML = `<div><b>${item.name}</b><br><small>${item.qty} ${item.unit} • ${item.price || '-'}</small></div><b>✎</b>`;
             list.appendChild(pill);
         });
         document.getElementById('dynamicDetail').classList.add('active');
     }
 
-    function closeDynamicView() { document.getElementById('dynamicDetail').classList.remove('active'); }
-
-    function openAddModal() {
-        currentEditIdx = null;
-        document.getElementById('modalTitle').innerText = "New Item";
-        document.querySelectorAll('#itemModal input:not([type="checkbox"]), #itemModal textarea').forEach(i => i.value = '');
-        document.getElementById('itemLowManual').checked = false;
-        populateSections();
-        document.getElementById('itemModal').style.display = 'flex';
+    function deleteCurrentSection() {
+        if(confirm(`Delete the "${currentOpenSection}" section? Items will be lost.`)) {
+            inventory = inventory.filter(i => i.section !== currentOpenSection);
+            sections = sections.filter(s => s !== currentOpenSection);
+            saveAndRefresh();
+            closeDynamicView();
+        }
     }
 
-    function openEditModal(idx) {
+    function openEditModal(idx = null) {
         currentEditIdx = idx;
-        const item = inventory[idx];
-        document.getElementById('modalTitle').innerText = "Update Item";
-        document.getElementById('itemName').value = item.name;
-        document.getElementById('itemQty').value = item.qty;
-        document.getElementById('itemUnit').value = item.unit;
-        document.getElementById('itemComments').value = item.comments || '';
-        document.getElementById('itemLowManual').checked = item.isLow || false;
-        populateSections(item.section);
-        document.getElementById('itemModal').style.display = 'flex';
-    }
-
-    function populateSections(selected = "") {
         const select = document.getElementById('itemSection');
-        select.innerHTML = sections.map(s => `<option value="${s}" ${s === selected ? 'selected' : ''}>${s}</option>`).join('');
+        select.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join('');
+        
+        if (idx !== null) {
+            const item = inventory[idx];
+            document.getElementById('modalTitle').innerText = "Update Item";
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemQty').value = item.qty;
+            document.getElementById('itemUnit').value = item.unit;
+            document.getElementById('itemSection').value = item.section;
+            document.getElementById('itemPrice').value = item.price || '';
+            document.getElementById('itemDate').value = item.date || '';
+            document.getElementById('itemComments').value = item.comments || '';
+            document.getElementById('itemLowManual').checked = item.isLow || false;
+            document.getElementById('itemInShoppingList').checked = item.onShop || false;
+        } else {
+            document.getElementById('modalTitle').innerText = "New Item";
+            document.querySelectorAll('#itemModal input:not([type="checkbox"]), #itemModal textarea').forEach(i => i.value = '');
+            document.getElementById('itemLowManual').checked = false;
+            document.getElementById('itemInShoppingList').checked = false;
+        }
+        document.getElementById('itemModal').style.display = 'flex';
     }
 
     function saveItem() {
-        const name = document.getElementById('itemName').value;
         const newSec = document.getElementById('newSection').value;
         let section = document.getElementById('itemSection').value;
-        if(newSec) {
-            if(!sections.includes(newSec)) sections.push(newSec);
-            section = newSec;
-        }
+        if(newSec) { if(!sections.includes(newSec)) sections.push(newSec); section = newSec; }
+
         const data = {
-            name, section,
+            name: document.getElementById('itemName').value,
             qty: parseFloat(document.getElementById('itemQty').value) || 0,
             unit: document.getElementById('itemUnit').value,
+            section,
+            price: document.getElementById('itemPrice').value,
+            date: document.getElementById('itemDate').value,
             comments: document.getElementById('itemComments').value,
-            isLow: document.getElementById('itemLowManual').checked
+            isLow: document.getElementById('itemLowManual').checked,
+            onShop: document.getElementById('itemInShoppingList').checked
         };
+
         if(currentEditIdx !== null) inventory[currentEditIdx] = data;
         else inventory.push(data);
-        localStorage.setItem('kData', JSON.stringify(inventory));
-        localStorage.setItem('kSections', JSON.stringify(sections));
+        saveAndRefresh();
         closeModal();
-        renderDashboard();
         if(document.getElementById('dynamicDetail').classList.contains('active')) openDynamicView(section);
     }
 
-    function renderLowStockSidebar() {
-        const lowItems = inventory.filter(i => i.qty < 1 || i.isLow);
-        document.getElementById('lowStockSidebar').innerHTML = lowItems.length ? 
-            lowItems.map(i => `— ${i.name}`).join('<br>') : "All items in stock.";
+    function renderSidebarLists() {
+        const runningLow = inventory.filter(i => i.qty < 1 || i.isLow);
+        const shopping = inventory.filter(i => i.onShop);
+        document.getElementById('runningLowList').innerHTML = runningLow.length ? runningLow.map(i => `— ${i.name}`).join('<br>') : "Stocked!";
+        document.getElementById('shoppingListSidebar').innerHTML = shopping.length ? shopping.map(i => `• ${i.name}`).join('<br>') : "Empty list.";
     }
 
+    function saveAndRefresh() {
+        localStorage.setItem('kData', JSON.stringify(inventory));
+        localStorage.setItem('kSections', JSON.stringify(sections));
+        renderDashboard();
+    }
+
+    function closeDynamicView() { document.getElementById('dynamicDetail').classList.remove('active'); }
     function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
     function changeTheme(t) { document.body.className = t; localStorage.setItem('kT', t); }
 
