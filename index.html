@@ -18,24 +18,16 @@
 
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; -webkit-font-smoothing: antialiased; }
         h1, h2, h3 { font-family: 'Playfair Display', serif; margin: 0; }
-
         .app-container { width: 100%; max-width: 480px; min-height: 100vh; margin: 0 auto; position: relative; }
 
-        /* Header */
+        /* Navigation */
         .header-bg { background: var(--pop); padding: 12px 20px; border-radius: 0 0 24px 24px; color: var(--header-text); text-align: center; position: relative; z-index: 10; }
         .menu-trigger { position: absolute; top: 10px; left: 15px; background: none; border: none; cursor: pointer; color: var(--header-text); font-size: 20px; }
-
-        /* Sidebar */
         .side-panel { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: var(--card); z-index: 1000; padding: 25px 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 10px 0 40px rgba(0,0,0,0.08); overflow-y: auto; }
         .side-panel.open { left: 0; }
         .overlay { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(4px); z-index: 999; }
-        
-        .accordion-btn { width: 100%; text-align: left; background: none; border: none; font-weight: 700; padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-content { display: none; padding: 10px 0; }
-        .accordion-content.active { display: block; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #F9F8F6; border-radius: 12px; margin-bottom: 8px; font-size: 13px; cursor: pointer; }
 
-        /* Grid */
+        /* Layout Units */
         .content { padding: 15px 20px; }
         .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .section-card { background: var(--panel); padding: 15px; border-radius: var(--radius); text-align: center; cursor: pointer; }
@@ -43,22 +35,23 @@
         .section-card b { font-size: 14px; }
         .section-card small { font-size: 9px; font-weight: 800; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Focus Card */
-        .section-focus-card { display: none; background: var(--accent-view); border-radius: 24px; padding: 20px; margin-top: 10px; }
-        .section-focus-card.active { display: block; }
-
-        /* Planner */
-        .week-dropdown { background: var(--card); border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
-        .week-header { padding: 12px 15px; background: var(--panel); font-weight: 700; display: flex; justify-content: space-between; cursor: pointer; }
-        .day-row { padding: 10px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; }
+        /* Planner Specifics */
+        .planner-card { background: var(--card); border-radius: 15px; margin-bottom: 12px; padding: 15px; border: 1px solid rgba(0,0,0,0.05); }
+        .meal-slot { margin-top: 10px; padding: 10px; background: var(--bg); border-radius: 10px; cursor: pointer; }
+        .meal-title { font-weight: 700; font-size: 12px; color: var(--text-soft); text-transform: uppercase; }
 
         /* Modals */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:2000; align-items:center; justify-content:center; }
-        .modal-content { background: var(--card); width: 88%; max-width: 340px; padding: 24px; border-radius: 28px; max-height: 90vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 4px 0; border-radius: 10px; border: 1px solid #E5E1DA; background: #F9F8F6; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+        .modal-content { background: var(--card); width: 88%; max-width: 360px; padding: 24px; border-radius: 28px; max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border-radius: 12px; border: 1px solid #E5E1DA; background: #F9F8F6; font-size: 14px; font-family: inherit; box-sizing: border-box; }
         .btn-action { background: var(--text-main); color: white; width: 100%; padding: 14px; border: none; border-radius: 50px; font-weight: 700; margin-top: 10px; cursor: pointer; }
-        
         .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--text-main); border-radius: 18px; color: white; border: none; font-size: 24px; z-index: 800; }
+        
+        /* Accordion */
+        .accordion-btn { width: 100%; text-align: left; background: none; border: none; font-weight: 700; padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .accordion-content { display: none; padding: 10px 0; }
+        .accordion-content.active { display: block; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #F9F8F6; border-radius: 12px; margin-bottom: 8px; font-size: 13px; cursor: pointer; }
     </style>
 </head>
 <body class="theme-sage">
@@ -66,57 +59,66 @@
 <div class="app-container">
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
     
+    <div id="mealModal" class="modal">
+        <div class="modal-content">
+            <h2 id="mealDetailTitle">Monday Dinner</h2>
+            <input type="text" id="mealDishName" placeholder="What's the dish?">
+            <input type="text" id="mealProtein" placeholder="Protein (e.g. Chicken)">
+            <input type="text" id="mealVeg" placeholder="Vegetables">
+            <input type="text" id="mealCarb" placeholder="Carbs (e.g. Rice)">
+            
+            <label style="font-size:11px; font-weight:700; margin-top:10px; display:block;">LINK INVENTORY INGREDIENT</label>
+            <select id="mealIngredientLink">
+                <option value="">-- Select Available Item --</option>
+            </select>
+
+            <button class="btn-action" onclick="saveMealDetail()">Save Meal Details</button>
+            <button style="background:none; border:none; color:var(--text-soft); width:100%; margin-top:10px;" onclick="closeMealModal()">Cancel</button>
+        </div>
+    </div>
+
     <div id="modalOverlay" class="modal" onclick="closeModalOnOutsideClick(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="modalTitle" style="font-size: 20px; margin-bottom:10px;">Item Details</h2>
+            <h2 id="modalTitle">New Item</h2>
             <input type="text" id="itemName" placeholder="Item Name">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                 <input type="number" id="itemQty" placeholder="Qty">
                 <input type="text" id="itemUnit" placeholder="Unit">
-                <input type="text" id="itemPrice" placeholder="Price ($)">
-                <input type="date" id="itemDate" title="Last Purchased Date">
             </div>
-            <input type="text" id="itemStore" placeholder="Purchase Place (Store)">
+            
+            <label style="font-size:11px; font-weight:700;">CATEGORY</label>
             <select id="itemSection"></select>
-            <input type="text" id="newSection" placeholder="Or Create New Section...">
-            <input type="text" id="itemTags" placeholder="Tags (Max 10, comma separated)">
-            <textarea id="itemComments" rows="2" placeholder="Recipe details or Notes..."></textarea>
-            <div style="display:flex; gap:10px; margin-top:10px; padding: 10px; background:#F1EFEA; border-radius:12px;">
-                <label style="font-size:11px; font-weight:700;"><input type="checkbox" id="itemLowManual"> LOW</label>
-                <label style="font-size:11px; font-weight:700;"><input type="checkbox" id="itemOnShop"> SHOP</label>
+            <input type="text" id="newSection" placeholder="Or create a new section...">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                <input type="date" id="itemDate" title="Purchase Date">
+                <input type="text" id="itemPrice" placeholder="Price ($)">
             </div>
-            <button class="btn-action" onclick="saveItem()">Save Item</button>
-            <button id="deleteBtn" style="background:none; border:none; color:maroon; font-size:11px; margin-top:12px; width:100%; cursor:pointer; font-weight:700;" onclick="deleteItem()">DELETE ITEM</button>
-        </div>
-    </div>
+            <input type="text" id="itemStore" placeholder="Store (e.g. Trader Joe's)">
+            
+            <label style="font-size:11px; font-weight:700;">TAGS</label>
+            <input list="tagOptions" id="itemTags" placeholder="Select or type new tag...">
+            <datalist id="tagOptions"></datalist>
 
-    <div id="plannerModal" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="plannerDayTitle">Monday</h2>
-            <textarea id="lunchInput" rows="2" placeholder="Lunch Plan..."></textarea>
-            <textarea id="dinnerInput" rows="2" placeholder="Dinner Plan..."></textarea>
-            <button class="btn-action" onclick="savePlan()">Save Plan</button>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button style="flex:1; padding:10px; font-size:12px; border-radius:10px; border:1px solid #ccc;" onclick="copyPlan()">Copy</button>
-                <button style="flex:1; padding:10px; font-size:12px; border-radius:10px; border:1px solid #ccc;" onclick="pastePlan()">Paste</button>
+            <textarea id="itemComments" rows="2" placeholder="Notes..."></textarea>
+            
+            <div style="display:flex; gap:10px; padding:12px; background:#F1EFEA; border-radius:12px; margin-top:10px;">
+                <label style="font-size:10px; font-weight:700;"><input type="checkbox" id="itemLowManual"> LOW</label>
+                <label style="font-size:10px; font-weight:700;"><input type="checkbox" id="itemOnShop"> SHOP</label>
             </div>
+            
+            <button class="btn-action" onclick="saveItem()">Save Item</button>
+            <button id="deleteBtn" style="color:maroon; font-size:11px; margin-top:12px; width:100%; border:none; background:none; display:none;" onclick="deleteItem()">DELETE</button>
         </div>
     </div>
 
     <div class="side-panel" id="sidePanel">
-        <div onclick="goHome()" style="cursor:pointer; font-weight:700; font-size:18px; margin-bottom:20px; color:var(--text-main);">🏠 Home</div>
+        <div onclick="goHome()" style="cursor:pointer; font-weight:700; font-size:18px; margin-bottom:20px;">🏠 Home</div>
         <div onclick="openPlanner()" style="cursor:pointer; font-weight:700; font-size:18px; margin-bottom:25px;">🗓️ Menu Planner</div>
-        
         <button class="accordion-btn" onclick="toggleAccordion('lowAcc')">📋 Running Low <span>▾</span></button>
         <div id="lowAcc" class="accordion-content"></div>
-
         <button class="accordion-btn" onclick="toggleAccordion('shopAcc')">🛒 Shopping List <span>▾</span></button>
         <div id="shopAcc" class="accordion-content"></div>
-
-        <div style="margin-top:40px;">
-            <label style="font-size:10px; font-weight:800; color:var(--text-soft); text-transform:uppercase;">Style</label>
-            <select onchange="changeTheme(this.value)" style="width:100%;"><option value="theme-sage">Sage</option><option value="theme-burgundy">Burgundy</option><option value="theme-navy">Navy</option><option value="theme-terracotta">Terracotta</option></select>
-        </div>
     </div>
 
     <div class="header-bg"><button class="menu-trigger" onclick="toggleMenu()">☰</button><h1>Wong's Kitchen</h1></div>
@@ -124,20 +126,20 @@
     <div class="content">
         <div class="section-grid" id="categoryGrid"></div>
 
-        <div id="sectionView" class="section-focus-card">
+        <div id="sectionView" style="display:none; background:var(--accent-view); border-radius:24px; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 id="focusTitle">Fridge</h2>
-                <button onclick="goHome()" style="background:var(--card); border:none; padding:5px 10px; border-radius:8px; font-weight:700;">Close</button>
+                <button onclick="goHome()" style="background:var(--card); border:none; border-radius:8px; padding:5px 10px;">Close</button>
             </div>
             <div id="focusItemList"></div>
         </div>
 
-        <div id="plannerView" style="display:none; margin-top:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2>Menu Planner</h2>
-                <button onclick="goHome()" style="background:var(--panel); border:none; padding:5px 12px; border-radius:8px; font-weight:700;">✕ Close</button>
+        <div id="plannerView" style="display:none;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <h2>Planner</h2>
+                <button onclick="goHome()" style="border:none; background:var(--panel); border-radius:8px; padding:5px 12px;">✕</button>
             </div>
-            <div id="weekContainer"></div>
+            <div id="weekPlannerContainer"></div>
         </div>
     </div>
 
@@ -147,35 +149,29 @@
 <script>
     let inventory = JSON.parse(localStorage.getItem('kData')) || [];
     let sections = JSON.parse(localStorage.getItem('kSections')) || ["Fridge", "Pantry", "Baking", "Freezer"];
-    let emojis = JSON.parse(localStorage.getItem('kEmojis')) || {"Fridge":"❄️", "Pantry":"🥫", "Baking":"🧁", "Freezer":"🧊"};
-    let weekPlans = JSON.parse(localStorage.getItem('kWeeks')) || { "Current Week": {}, "Next Week": {} };
-    let clipboardPlan = null;
+    let emojis = {"Fridge":"❄️", "Pantry":"🥫", "Baking":"🧁", "Freezer":"🧊"};
+    let weekPlans = JSON.parse(localStorage.getItem('kWeeks')) || {};
+    let globalTags = JSON.parse(localStorage.getItem('kGlobalTags')) || ["Protein", "Produce", "Snack"];
 
     function renderDashboard() {
         const grid = document.getElementById('categoryGrid');
-        grid.innerHTML = '';
-        grid.style.display = 'grid';
-        document.getElementById('sectionView').classList.remove('active');
+        grid.innerHTML = ''; grid.style.display = 'grid';
+        document.getElementById('sectionView').style.display = 'none';
         document.getElementById('plannerView').style.display = 'none';
 
         sections.forEach(s => {
             const card = document.createElement('div');
             card.className = 'section-card';
             card.onclick = () => openFocus(s);
-            card.innerHTML = `<div class="icon">${emojis[s] || '✨'}</div><b>${s}</b><br><small>${inventory.filter(i=>i.section===s).length} ITEMS</small>`;
+            card.innerHTML = `<div class="icon">${emojis[s] || '📦'}</div><b>${s}</b><br><small>${inventory.filter(i=>i.section===s).length} ITEMS</small>`;
             grid.appendChild(card);
         });
     }
 
-    function goHome() {
-        if(document.getElementById('sidePanel').classList.contains('open')) toggleMenu();
-        renderDashboard();
-    }
-
     function openFocus(s) {
         document.getElementById('categoryGrid').style.display = 'none';
-        document.getElementById('plannerView').style.display = 'none';
         const focus = document.getElementById('sectionView');
+        focus.style.display = 'block';
         document.getElementById('focusTitle').innerText = s;
         const list = document.getElementById('focusItemList');
         list.innerHTML = '';
@@ -184,84 +180,81 @@
             const div = document.createElement('div');
             div.className = 'list-item';
             div.onclick = () => openEditModal(idx);
-            div.innerHTML = `<span>${item.name} (${item.qty} ${item.unit})</span><span>✎</span>`;
+            div.innerHTML = `<span>${item.name} (${item.qty})</span><span>✎</span>`;
             list.appendChild(div);
         });
-        focus.classList.add('active');
     }
 
+    /* Planner Logic */
     function openPlanner() {
         toggleMenu();
         document.getElementById('categoryGrid').style.display = 'none';
-        document.getElementById('sectionView').classList.remove('active');
+        document.getElementById('sectionView').style.display = 'none';
         document.getElementById('plannerView').style.display = 'block';
-        renderPlanner();
+        renderSophisticatedPlanner();
     }
 
-    function renderPlanner() {
-        const container = document.getElementById('weekContainer');
+    function renderSophisticatedPlanner() {
+        const container = document.getElementById('weekPlannerContainer');
         container.innerHTML = '';
-        Object.keys(weekPlans).forEach(weekName => {
-            const weekDiv = document.createElement('div');
-            weekDiv.className = 'week-dropdown';
-            weekDiv.innerHTML = `<div class="week-header" onclick="this.nextElementSibling.classList.toggle('active')">${weekName} <span>▾</span></div>`;
-            const content = document.createElement('div');
-            content.className = 'accordion-content';
-            ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].forEach(day => {
-                const plan = weekPlans[weekName][day] || { lunch: '', dinner: '' };
-                const dayRow = document.createElement('div');
-                dayRow.className = 'day-row';
-                dayRow.onclick = () => openDayDetail(weekName, day);
-                dayRow.innerHTML = `<span>${day}</span><small style="color:var(--text-soft)">${plan.dinner || plan.lunch || '—'}</small>`;
-                content.appendChild(dayRow);
+        ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach(day => {
+            const dayCard = document.createElement('div');
+            dayCard.className = 'planner-card';
+            dayCard.innerHTML = `<h3>${day}</h3>`;
+            
+            ["Lunch", "Dinner"].forEach(mealType => {
+                const plan = (weekPlans[day] && weekPlans[day][mealType]) || { dish: 'No plan set' };
+                const slot = document.createElement('div');
+                slot.className = 'meal-slot';
+                slot.onclick = () => openMealDetail(day, mealType);
+                slot.innerHTML = `<div class="meal-title">${mealType}</div><div>${plan.dish}</div>
+                                  ${plan.protein ? `<small style="color:var(--text-soft)">${plan.protein} • ${plan.veg}</small>` : ''}`;
+                dayCard.appendChild(slot);
             });
-            weekDiv.appendChild(content);
-            container.appendChild(weekDiv);
+            container.appendChild(dayCard);
         });
     }
 
-    function openDayDetail(week, day) {
-        window.currentWeek = week; window.currentDay = day;
-        const plan = weekPlans[week][day] || { lunch: '', dinner: '' };
-        document.getElementById('plannerDayTitle').innerText = day;
-        document.getElementById('lunchInput').value = plan.lunch;
-        document.getElementById('dinnerInput').value = plan.dinner;
-        document.getElementById('plannerModal').style.display = 'flex';
+    function openMealDetail(day, type) {
+        window.currentMealDay = day; window.currentMealType = type;
+        const data = (weekPlans[day] && weekPlans[day][type]) || { dish: '', protein: '', veg: '', carb: '', linked: '' };
+        
+        document.getElementById('mealDetailTitle').innerText = `${day} ${type}`;
+        document.getElementById('mealDishName').value = data.dish;
+        document.getElementById('mealProtein').value = data.protein;
+        document.getElementById('mealVeg').value = data.veg;
+        document.getElementById('mealCarb').value = data.carb;
+        
+        const select = document.getElementById('mealIngredientLink');
+        select.innerHTML = '<option value="">-- Select Available Item --</option>' + 
+            inventory.map(i => `<option value="${i.name}" ${data.linked === i.name ? 'selected' : ''}>${i.name} (${i.section})</option>`).join('');
+        
+        document.getElementById('mealModal').style.display = 'flex';
     }
 
-    function savePlan() {
-        weekPlans[window.currentWeek][window.currentDay] = { lunch: document.getElementById('lunchInput').value, dinner: document.getElementById('dinnerInput').value };
+    function saveMealDetail() {
+        if (!weekPlans[window.currentMealDay]) weekPlans[window.currentMealDay] = {};
+        weekPlans[window.currentMealDay][window.currentMealType] = {
+            dish: document.getElementById('mealDishName').value || 'No plan set',
+            protein: document.getElementById('mealProtein').value,
+            veg: document.getElementById('mealVeg').value,
+            carb: document.getElementById('mealCarb').value,
+            linked: document.getElementById('mealIngredientLink').value
+        };
         localStorage.setItem('kWeeks', JSON.stringify(weekPlans));
-        document.getElementById('plannerModal').style.display = 'none';
-        renderPlanner();
+        closeMealModal();
+        renderSophisticatedPlanner();
     }
 
-    function copyPlan() { clipboardPlan = { lunch: document.getElementById('lunchInput').value, dinner: document.getElementById('dinnerInput').value }; }
-    function pastePlan() { if(clipboardPlan) { document.getElementById('lunchInput').value = clipboardPlan.lunch; document.getElementById('dinnerInput').value = clipboardPlan.dinner; } }
+    function closeMealModal() { document.getElementById('mealModal').style.display = 'none'; }
 
-    function toggleAccordion(id) {
-        document.getElementById(id).classList.toggle('active');
-        renderSidebarLists();
-    }
-
-    function renderSidebarLists() {
-        const low = inventory.filter(i => i.isLow);
-        const shop = inventory.filter(i => i.onShop);
-        document.getElementById('lowAcc').innerHTML = low.map(i => `<div class="list-item" onclick="toggleMenu(); openEditModal(${inventory.indexOf(i)})"><span>${i.name}</span><button onclick="event.stopPropagation(); toggleStatus(${inventory.indexOf(i)}, 'isLow')" style="background:none; border:none; color:maroon;">✕</button></div>`).join('');
-        document.getElementById('shopAcc').innerHTML = shop.map(i => `<div class="list-item" onclick="toggleMenu(); openEditModal(${inventory.indexOf(i)})"><span>${i.name}</span><button onclick="event.stopPropagation(); toggleStatus(${inventory.indexOf(i)}, 'onShop')" style="background:none; border:none; color:maroon;">✕</button></div>`).join('');
-    }
-
-    function toggleStatus(idx, key) {
-        inventory[idx][key] = !inventory[idx][key];
-        localStorage.setItem('kData', JSON.stringify(inventory));
-        renderSidebarLists(); renderDashboard();
-    }
-
+    /* Item Modal Logic */
     function openAddModal() {
         window.currentEditIdx = null;
         document.getElementById('deleteBtn').style.display = 'none';
         document.getElementById('modalTitle').innerText = "New Item";
         document.querySelectorAll('#modalOverlay input, #modalOverlay textarea').forEach(i => i.value = '');
+        updateTagDatalist();
         populateSections();
         document.getElementById('modalOverlay').style.display = 'flex';
     }
@@ -274,13 +267,14 @@
         document.getElementById('itemName').value = item.name;
         document.getElementById('itemQty').value = item.qty;
         document.getElementById('itemUnit').value = item.unit;
-        document.getElementById('itemPrice').value = item.price || '';
         document.getElementById('itemDate').value = item.date || '';
+        document.getElementById('itemPrice').value = item.price || '';
         document.getElementById('itemStore').value = item.store || '';
         document.getElementById('itemTags').value = item.tags || '';
         document.getElementById('itemComments').value = item.comments || '';
         document.getElementById('itemLowManual').checked = item.isLow;
         document.getElementById('itemOnShop').checked = item.onShop;
+        updateTagDatalist();
         populateSections(item.section);
         document.getElementById('modalOverlay').style.display = 'flex';
     }
@@ -288,43 +282,48 @@
     function saveItem() {
         const newSec = document.getElementById('newSection').value;
         let section = document.getElementById('itemSection').value;
-        if(newSec) { if(!sections.includes(newSec)) { sections.push(newSec); emojis[newSec] = "📦"; } section = newSec; }
+        if(newSec) { if(!sections.includes(newSec)) sections.push(newSec); section = newSec; }
+        
+        const tag = document.getElementById('itemTags').value;
+        if(tag && !globalTags.includes(tag)) globalTags.push(tag);
 
         const data = {
             name: document.getElementById('itemName').value, section,
             qty: document.getElementById('itemQty').value, unit: document.getElementById('itemUnit').value,
-            price: document.getElementById('itemPrice').value, date: document.getElementById('itemDate').value,
-            store: document.getElementById('itemStore').value, tags: document.getElementById('itemTags').value,
-            comments: document.getElementById('itemComments').value, isLow: document.getElementById('itemLowManual').checked,
-            onShop: document.getElementById('itemOnShop').checked
+            date: document.getElementById('itemDate').value, price: document.getElementById('itemPrice').value,
+            store: document.getElementById('itemStore').value, tags: tag,
+            comments: document.getElementById('itemComments').value, 
+            isLow: document.getElementById('itemLowManual').checked, onShop: document.getElementById('itemOnShop').checked
         };
         if(window.currentEditIdx !== null) inventory[window.currentEditIdx] = data;
         else inventory.push(data);
+        
         localStorage.setItem('kData', JSON.stringify(inventory));
         localStorage.setItem('kSections', JSON.stringify(sections));
-        localStorage.setItem('kEmojis', JSON.stringify(emojis));
+        localStorage.setItem('kGlobalTags', JSON.stringify(globalTags));
         document.getElementById('modalOverlay').style.display = 'none';
         renderDashboard();
-    }
-
-    function deleteItem() {
-        if(confirm("Permanently delete?")) {
-            inventory.splice(window.currentEditIdx, 1);
-            localStorage.setItem('kData', JSON.stringify(inventory));
-            document.getElementById('modalOverlay').style.display = 'none';
-            renderDashboard();
-        }
     }
 
     function populateSections(sel = "") {
         document.getElementById('itemSection').innerHTML = sections.map(s => `<option value="${s}" ${s===sel?'selected':''}>${s}</option>`).join('');
     }
 
+    function updateTagDatalist() {
+        document.getElementById('tagOptions').innerHTML = globalTags.map(t => `<option value="${t}">`).join('');
+    }
+
     function toggleMenu() { document.getElementById('sidePanel').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidePanel').classList.contains('open') ? 'block' : 'none'; }
-    function changeTheme(t) { document.body.className = t; localStorage.setItem('kT', t); }
+    function goHome() { if(document.getElementById('sidePanel').classList.contains('open')) toggleMenu(); renderDashboard(); }
+    function toggleAccordion(id) { document.getElementById(id).classList.toggle('active'); renderSidebarLists(); }
+    function renderSidebarLists() {
+        const low = inventory.filter(i => i.isLow);
+        const shop = inventory.filter(i => i.onShop);
+        document.getElementById('lowAcc').innerHTML = low.map(i => `<div class="list-item" onclick="openEditModal(${inventory.indexOf(i)})">${i.name}</div>`).join('');
+        document.getElementById('shopAcc').innerHTML = shop.map(i => `<div class="list-item" onclick="openEditModal(${inventory.indexOf(i)})">${i.name}</div>`).join('');
+    }
     function closeModalOnOutsideClick(e) { if(e.target.id === 'modalOverlay') document.getElementById('modalOverlay').style.display = 'none'; }
 
-    document.body.className = localStorage.getItem('kT') || 'theme-sage';
     renderDashboard();
 </script>
 </body>
