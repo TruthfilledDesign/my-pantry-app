@@ -181,6 +181,23 @@
                 }).catch(err => console.error("Error saving to cloud:", err));
             };
 
+            const handleUpdateSettings = (newAreas, newSections, newStores) => {
+                const nextAreas = newAreas !== undefined ? newAreas : broadAreas;
+                const nextSections = newSections !== undefined ? newSections : sections;
+                const nextStores = newStores !== undefined ? newStores : stores;
+
+                setBroadAreas(nextAreas);
+                setSections(nextSections);
+                setStores(nextStores);
+
+                db.collection("wongHouse").doc("mainData").set({
+                    items,
+                    broadAreas: nextAreas,
+                    sections: nextSections,
+                    stores: nextStores
+                }).catch(err => console.error("Error saving to cloud:", err));
+            };
+
             const updateQty = (id, delta) => {
                 const newItems = items.map(item => {
                     if (item.id === id) {
@@ -330,11 +347,9 @@
                         <MenuDrawer 
                             onClose={() => setMenuOpen(false)}
                             broadAreas={broadAreas}
-                            setBroadAreas={(areas) => { setBroadAreas(areas); syncToCloud(undefined, areas, undefined, undefined); }}
                             sections={sections}
-                            setSections={(secs) => { setSections(secs); syncToCloud(undefined, undefined, secs, undefined); }}
                             stores={stores}
-                            setStores={(st) => { setStores(st); syncToCloud(undefined, undefined, undefined, st); }}
+                            onUpdateSettings={handleUpdateSettings}
                             settingsTab={settingsTab}
                             setSettingsTab={setSettingsTab}
                             onNavigateArea={(area) => { setActiveTab('home'); setSelectedBroadArea(area); setMenuOpen(false); }}
@@ -613,7 +628,7 @@
             );
         }
 
-        function MenuDrawer({ onClose, broadAreas, setBroadAreas, sections, setSections, stores, setStores, settingsTab, setSettingsTab, onNavigateArea }) {
+        function MenuDrawer({ onClose, broadAreas, sections, stores, onUpdateSettings, settingsTab, setSettingsTab, onNavigateArea }) {
             const [selectedAreaForSections, setSelectedAreaForSections] = useState(broadAreas[0]);
             const [newVal, setNewVal] = useState('');
             const [editingIndex, setEditingIndex] = useState(null);
@@ -626,20 +641,20 @@
 
                 if (settingsTab === 'areas') {
                     if (!broadAreas.includes(trimmed)) {
-                        const updated = [...broadAreas, trimmed];
-                        setBroadAreas(updated);
-                        if (!sections[trimmed]) {
-                            setSections({ ...sections, [trimmed]: [] });
-                        }
+                        const updatedAreas = [...broadAreas, trimmed];
+                        const updatedSections = sections[trimmed] ? sections : { ...sections, [trimmed]: [] };
+                        onUpdateSettings(updatedAreas, updatedSections, undefined);
                     }
                 } else if (settingsTab === 'sections') {
                     const currentList = sections[selectedAreaForSections] || [];
                     if (!currentList.includes(trimmed)) {
-                        setSections({ ...sections, [selectedAreaForSections]: [...currentList, trimmed] });
+                        const updatedSections = { ...sections, [selectedAreaForSections]: [...currentList, trimmed] };
+                        onUpdateSettings(undefined, updatedSections, undefined);
                     }
                 } else {
                     if (!stores.includes(trimmed)) {
-                        setStores([...stores, trimmed]);
+                        const updatedStores = [...stores, trimmed];
+                        onUpdateSettings(undefined, undefined, updatedStores);
                     }
                 }
                 setNewVal('');
@@ -653,21 +668,23 @@
                     }
                     if (confirm(`Delete broad area "${targetItem}" and its sections?`)) {
                         const updatedAreas = broadAreas.filter(a => a !== targetItem);
-                        setBroadAreas(updatedAreas);
                         const copy = { ...sections };
                         delete copy[targetItem];
-                        setSections(copy);
+                        onUpdateSettings(updatedAreas, copy, undefined);
                     }
                 } else if (settingsTab === 'sections') {
                     const currentList = sections[selectedAreaForSections] || [];
-                    setSections({ ...sections, [selectedAreaForSections]: currentList.filter(s => s !== targetItem) });
+                    const updatedList = currentList.filter(s => s !== targetItem);
+                    const updatedSections = { ...sections, [selectedAreaForSections]: updatedList };
+                    onUpdateSettings(undefined, updatedSections, undefined);
                 } else {
                     if (stores.length <= 1) {
                         alert('You must have at least one store.');
                         return;
                     }
                     if (confirm(`Delete store "${targetItem}"?`)) {
-                        setStores(stores.filter(s => s !== targetItem));
+                        const updatedStores = stores.filter(s => s !== targetItem);
+                        onUpdateSettings(undefined, undefined, updatedStores);
                     }
                 }
             };
@@ -679,17 +696,18 @@
                     const updated = [...broadAreas];
                     const [moved] = updated.splice(fromIdx, 1);
                     updated.splice(toIdx, 0, moved);
-                    setBroadAreas(updated);
+                    onUpdateSettings(updated, undefined, undefined);
                 } else if (settingsTab === 'sections') {
                     const currentList = [...(sections[selectedAreaForSections] || [])];
                     const [moved] = currentList.splice(fromIdx, 1);
                     currentList.splice(toIdx, 0, moved);
-                    setSections({ ...sections, [selectedAreaForSections]: currentList });
+                    const updatedSections = { ...sections, [selectedAreaForSections]: currentList };
+                    onUpdateSettings(undefined, updatedSections, undefined);
                 } else {
                     const updated = [...stores];
                     const [moved] = updated.splice(fromIdx, 1);
                     updated.splice(toIdx, 0, moved);
-                    setStores(updated);
+                    onUpdateSettings(undefined, undefined, updated);
                 }
             };
 
@@ -700,26 +718,28 @@
                 if (settingsTab === 'areas') {
                     if (broadAreas.includes(trimmed)) { setEditingIndex(null); return; }
                     const updatedAreas = broadAreas.map(a => a === oldVal ? trimmed : a);
-                    setBroadAreas(updatedAreas);
                     const copy = { ...sections };
                     copy[trimmed] = copy[oldVal];
                     delete copy[oldVal];
-                    setSections(copy);
+                    onUpdateSettings(updatedAreas, copy, undefined);
                 } else if (settingsTab === 'sections') {
                     const currentList = sections[selectedAreaForSections] || [];
                     if (currentList.includes(trimmed)) { setEditingIndex(null); return; }
-                    setSections({ ...sections, [selectedAreaForSections]: currentList.map(s => s === oldVal ? trimmed : s) });
+                    const updatedList = currentList.map(s => s === oldVal ? trimmed : s);
+                    const updatedSections = { ...sections, [selectedAreaForSections]: updatedList };
+                    onUpdateSettings(undefined, updatedSections, undefined);
                 } else {
                     if (stores.includes(trimmed)) { setEditingIndex(null); return; }
-                    setStores(stores.map(st => st === oldVal ? trimmed : st));
+                    const updatedStores = stores.map(st => st === oldVal ? trimmed : st);
+                    onUpdateSettings(undefined, undefined, updatedStores);
                 }
                 setEditingIndex(null);
                 setEditVal('');
             };
 
             return (
-                <div className="fixed inset-0 bg-japandi-text/30 backdrop-blur-sm z-50 flex justify-end">
-                    <div className="bg-white w-full max-w-xs h-full shadow-2xl flex flex-col animate-slide-right pb-safe-area">
+                <div className="fixed inset-0 bg-japandi-text/30 backdrop-blur-sm z-50 flex justify-end" onClick={onClose}>
+                    <div className="bg-white w-full max-w-xs h-full shadow-2xl flex flex-col animate-slide-right pb-safe-area" onClick={e => e.stopPropagation()}>
                         <div className="p-5 border-b border-japandi-border flex justify-between items-center bg-japandi-bg">
                             <h2 className="font-medium text-base text-japandi-text">Settings & Menu</h2>
                             <button onClick={onClose} className="p-1.5 rounded-lg bg-white border border-japandi-border text-japandi-muted hover:text-japandi-text">
@@ -885,7 +905,7 @@
                         </div>
 
                         <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
-                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.8</p>
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.10</p>
                         </div>
                     </div>
                 </div>
