@@ -94,7 +94,7 @@
         const db = firebase.firestore();
 
         // --- Defaults ---
-        const FOOD_DB = ["Almond Milk", "Apples", "Avocado", "Bacon", "Bananas", "Black Beans", "Bread", "Butter", "Carrots", "Cereal", "Cheddar Cheese", "Chicken Breast", "Coffee", "Eggs", "Garlic", "Greek Yogurt", "Ground Beef", "Honey", "Ketchup", "Lemon", "Lettuce", "Maple Syrup", "Olive Oil", "Onions", "Oatmeal", "Pasta", "Peanut Butter", "Potatoes", "Rice", "Soy Sauce", "Spinach", "Tomatoes"];
+        const FOOD_DB = ["Almond Milk", "Apples", "Avocado", "Bacon", "Bananas", "Black Beans", "Bread", "Butter", "Carrots", "Cereal", "Cheddar Cheese", "Chicken Breast", "Coffee", "Eggs", "Garlic", "Greek Yogurt", "Ground Beef", "Honey", "Ketchup", "Lemon", "Lettuce", "Maple Syrup", "Olive Oil", "Onions", "Oatmeal", "Pasta", "Peanut Butter", "Potatoes", "Rice", "Salmon", "Soy Sauce", "Spinach", "Tomatoes"];
         const DEFAULT_STORES = ["Any Store", "Trader Joe's", "Costco", "Whole Foods", "Target", "Local Grocery", "Farmers Market"];
         const DEFAULT_BROAD_AREAS = ["Kitchen", "Cleaning", "Laundry"];
         const DEFAULT_SECTIONS_MAP = {
@@ -560,18 +560,18 @@
             );
         }
 
-        function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse }) {
+        function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse, onReorderItems }) {
             const [search, setSearch] = useState('');
 
             const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === broadArea);
             const filtered = areaItems.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
 
             const grouped = sections.reduce((acc, sec) => {
-                acc[sec] = filtered.filter(i => (i.section || sections[0]) === sec);
+                acc[sec] = filtered.filter(i => (i.section || sections[0]).trim().toLowerCase() === sec.trim().toLowerCase());
                 return acc;
             }, {});
 
-            const uncategorized = filtered.filter(i => !sections.includes(i.section));
+            const uncategorized = filtered.filter(i => !sections.some(sec => (i.section || '').trim().toLowerCase() === sec.trim().toLowerCase()));
             if (uncategorized.length > 0) {
                 grouped['Uncategorized'] = uncategorized;
             }
@@ -634,25 +634,36 @@
                                             {sectionItems.length === 0 ? (
                                                 <p className="text-xs text-japandi-muted italic py-3 text-center">No items in this section.</p>
                                             ) : (
-                                                sectionItems.map(item => (
+                                                sectionItems.map((item, idx) => (
                                                     <div 
                                                         key={item.id} 
+                                                        draggable
+                                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
+                                                        onDragOver={(e) => e.preventDefault()}
+                                                        onDrop={(e) => {
+                                                            e.preventDefault();
+                                                            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                                                            onReorderItems(section, fromIdx, idx);
+                                                        }}
                                                         onClick={() => onEdit(item)}
                                                         className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''}`}
                                                     >
-                                                        <div className="flex-1 min-w-0 pr-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
-                                                                    {item.name}
-                                                                </h4>
-                                                                {item.qty <= item.threshold && (
-                                                                    <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
+                                                        <div className="flex items-center flex-1 min-w-0 pr-3">
+                                                            <IconGrip />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
+                                                                        {item.name}
+                                                                    </h4>
+                                                                    {item.qty <= item.threshold && (
+                                                                        <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
+                                                                {item.notes && (
+                                                                    <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
                                                                 )}
                                                             </div>
-                                                            <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
-                                                            {item.notes && (
-                                                                <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
-                                                            )}
                                                         </div>
 
                                                         <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
@@ -969,7 +980,7 @@
                         </div>
 
                         <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
-                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.21</p>
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.25</p>
                         </div>
                     </div>
                 </div>
@@ -1137,7 +1148,7 @@
                                         <select 
                                             value={broadArea} 
                                             onChange={handleBroadAreaChange}
-                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm"
                                         >
                                             {broadAreas.map(a => <option key={a} value={a}>{a}</option>)}
                                         </select>
@@ -1150,7 +1161,7 @@
                                                 <select 
                                                     value={section} 
                                                     onChange={(e) => setSection(e.target.value)}
-                                                    className="flex-1 p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                                    className="flex-1 p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm"
                                                 >
                                                     {(sectionsMap[broadArea] || []).map(s => <option key={s} value={s}>{s}</option>)}
                                                 </select>
@@ -1215,7 +1226,7 @@
                                         <select 
                                             value={store} 
                                             onChange={(e) => setStore(e.target.value)}
-                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm"
                                         >
                                             {availableStores.map(s => <option key={s} value={s}>{s}</option>)}
                                         </select>
@@ -1347,6 +1358,39 @@
                 } else {
                     newItems = items.map(i => i.id === savedItem.id ? savedItem : i);
                 }
+                setItems(newItems);
+                syncToCloud(newItems, undefined, undefined, undefined, undefined);
+            };
+
+            const handleReorderItems = (sectionName, fromIdx, toIdx) => {
+                if (fromIdx === toIdx || isNaN(fromIdx)) return;
+                const area = selectedBroadArea;
+                const targetItems = items.filter(i => 
+                    (i.broadArea || 'Kitchen') === area && 
+                    (i.section || 'General').trim().toLowerCase() === sectionName.trim().toLowerCase()
+                );
+
+                if (targetItems.length <= 1) return;
+
+                const reorderedTarget = [...targetItems];
+                const [moved] = reorderedTarget.splice(fromIdx, 1);
+                reorderedTarget.splice(toIdx, 0, moved);
+
+                const targetIds = new Set(targetItems.map(i => i.id));
+                let targetInserted = false;
+                const newItems = [];
+
+                for (let item of items) {
+                    if (targetIds.has(item.id)) {
+                        if (!targetInserted) {
+                            newItems.push(...reorderedTarget);
+                            targetInserted = true;
+                        }
+                    } else {
+                        newItems.push(item);
+                    }
+                }
+
                 setItems(newItems);
                 syncToCloud(newItems, undefined, undefined, undefined, undefined);
             };
@@ -1483,6 +1527,7 @@
                                     onEdit={(item) => { setEditingItem(item); setModalMode('edit'); }}
                                     collapsedSections={collapsedSections}
                                     toggleSectionCollapse={toggleSectionCollapse}
+                                    onReorderItems={handleReorderItems}
                                 />
                             )
                         ) : activeTab === 'shopping' ? (
