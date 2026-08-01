@@ -3,305 +3,1089 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wong's Kitchen 🌿</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #EAE4D9; --panel: #DCD3C1; --card: #FDFBFA;
-            --text-main: #3E3A37; --text-soft: #7C7874; --radius: 20px;
-            --low-alert: #B68576;
-            /* Planner Palette */
-            --planner-bg: #CFD4CD; --planner-panel: #B8BEB6; --planner-accent: #5E6B5E;
+    <title>Wong's House</title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        japandi: {
+                            bg: '#efece4',
+                            card: '#ffffff',
+                            text: '#2c2b29',
+                            sage: '#859582',
+                            burgundy: '#8c595c',
+                            border: '#ded8cc',
+                            muted: '#7a756b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
         }
-        .theme-sage { --pop: #A8B29C; --header-text: #2D3A2D; }
-        .theme-burgundy { --pop: #B68576; --header-text: #FDFBFA; }
+    </script>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- HTML5 QRCode Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; transition: background 0.3s; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; margin: 0; }
-
-        .app-container { width: 100%; max-width: 480px; min-height: 100vh; margin: 0 auto; position: relative; }
-
-        /* --- LOGO --- */
-        .logo-wrap { display: flex; flex-direction: column; align-items: center; margin: 20px 0 10px; }
-        .logo-emblem { width: 50px; height: 50px; background: var(--pop); border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .logo-emblem::after { content: ''; position: absolute; width: 12px; height: 16px; background: var(--card); border-radius: 50% 50% 40% 40%; transform: translateY(6px); }
-        .logo-emblem::before { content: ''; position: absolute; width: 3px; height: 24px; background: var(--card); border-radius: 2px; transform: translateY(-8px); }
-        .logo-leaf { position: absolute; width: 8px; height: 12px; background: var(--bg); border-radius: 0 10px 0 10px; top: 15px; right: 12px; transform: rotate(20deg); }
-
-        /* Navigation */
-        .header-bg { padding: 15px 20px; position: relative; z-index: 10; }
-        .menu-trigger { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); }
+    <style>
+        body { 
+            background-color: #efece4; 
+            color: #2c2b29; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pb-safe-area { padding-bottom: env(safe-area-inset-bottom, 12px); }
+        .pt-safe-area { padding-top: env(safe-area-inset-top, 0px); }
         
-        /* Sidebar (REVERTED TO ORIGINAL STATE) */
-        .side-panel { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: var(--card); z-index: 1000; padding: 25px 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 10px 0 40px rgba(0,0,0,0.08); overflow-y: auto; }
-        .side-panel.open { left: 0; }
-        .overlay { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(4px); z-index: 999; }
-
-        .accordion-btn { width: 100%; text-align: left; background: none; border: none; font-weight: 700; padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
-        .accordion-content { display: none; padding: 10px 0; }
-        .accordion-content.active { display: block; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .circle-x { position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        /* Grid */
-        .content { padding: 0 20px 100px; }
-        .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .section-card { background: var(--panel); padding: 15px; border-radius: var(--radius); text-align: center; cursor: pointer; }
-        
-        /* Planner */
-        .planner-mode { background-color: var(--planner-bg) !important; }
-        .planner-drop { width: 100%; background: var(--planner-panel); border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-bottom: 8px; text-align: left; display: flex; justify-content: space-between; cursor: pointer; }
-        .day-box { background: var(--card); border-radius: 15px; padding: 12px; margin-bottom: 10px; }
-        .meal-slot { padding: 10px; background: #f4f6f5; border-radius: 10px; margin-top: 5px; cursor: pointer; border-left: 4px solid var(--planner-accent); }
-
-        /* Modals */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:2000; align-items:center; justify-content:center; }
-        .modal-content { background: var(--card); width: 88%; max-width: 360px; padding: 25px; border-radius: 28px; max-height: 85vh; overflow-y: auto; position: relative; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ddd; background: #f9f9f9; font-family: inherit; box-sizing: border-box; }
-        .btn-save { background: var(--text-main); color: white; width: 100%; padding: 14px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--text-main); border-radius: 20px; color: white; border: none; font-size: 30px; cursor: pointer; z-index: 800; }
+        @keyframes slideUp { 
+            from { transform: translateY(100%); } 
+            to { transform: translateY(0); } 
+        }
+        @keyframes slideRight { 
+            from { transform: translateX(-100%); } 
+            to { transform: translateX(0); } 
+        }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
-<body class="theme-sage">
+<body>
+    <div id="root"></div>
 
-<div class="app-container" id="app">
-    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
 
-    <div class="side-panel" id="sidePanel">
-        <div class="circle-x" onclick="toggleMenu()">×</div>
-        <h2 style="margin-top:30px">Menu</h2>
-        <div onclick="goHome()" style="padding:15px 0; border-bottom:1px solid #eee; cursor:pointer; font-weight:700;">🏠 Home</div>
-        <div onclick="openPlanner()" style="padding:15px 0; border-bottom:1px solid #eee; cursor:pointer; font-weight:700;">🗓️ Menu Planner</div>
-        
-        <button class="accordion-btn" onclick="toggleAccordion('lowAcc')">📋 Running Low <span>▾</span></button>
-        <div id="lowAcc" class="accordion-content">
-            <div id="lowItems"></div>
-        </div>
+        const FOOD_DB = ["Almond Milk", "Apples", "Avocado", "Bacon", "Bananas", "Black Beans", "Bread", "Butter", "Carrots", "Cereal", "Cheddar Cheese", "Chicken Breast", "Coffee", "Eggs", "Garlic", "Greek Yogurt", "Ground Beef", "Honey", "Ketchup", "Lemon", "Lettuce", "Maple Syrup", "Olive Oil", "Onions", "Oatmeal", "Pasta", "Peanut Butter", "Potatoes", "Rice", "Soy Sauce", "Spinach", "Tomatoes"];
+        const DEFAULT_STORES = ["Any Store", "Trader Joe's", "Costco", "Whole Foods", "Target", "Local Grocery", "Farmers Market"];
+        const DEFAULT_BROAD_AREAS = ["Kitchen", "Cleaning", "Laundry"];
+        const DEFAULT_SECTIONS_MAP = {
+            "Kitchen": ["Fridge", "Produce", "Protein", "Pantry", "Freezer", "Household Essentials"],
+            "Cleaning": ["Surface Cleaners", "Bathroom", "Tools & Supplies"],
+            "Laundry": ["Detergent & Softener", "Stain Removers"]
+        };
 
-        <button class="accordion-btn" onclick="toggleAccordion('shopAcc')">🛒 Shopping List <span>▾</span></button>
-        <div id="shopAcc" class="accordion-content">
-            <div id="shopItems"></div>
-        </div>
+        const IconHome = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>;
+        const IconList = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>;
+        const IconPlus = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4v16m8-8H4"/></svg>;
+        const IconMinus = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 12H4"/></svg>;
+        const IconCamera = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>;
+        const IconSearch = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>;
+        const IconX = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12"/></svg>;
+        const IconTrash = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
+        const IconMenu = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16"/></svg>;
+        const IconChevronDown = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
+        const IconChevronRight = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7"/></svg>;
+        const IconEdit = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
+        const IconArrowUp = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 15l7-7 7 7"/></svg>;
+        const IconArrowDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
 
-        <div style="margin-top:20px">
-            <label style="font-size:10px; font-weight:800; color:var(--text-soft)">STYLE</label>
-            <select id="themeSelect" onchange="changeTheme(this.value)"><option value="theme-sage">Sage</option><option value="theme-burgundy">Burgundy</option></select>
-        </div>
-    </div>
-
-    <div class="header-bg"><button class="menu-trigger" onclick="toggleMenu()">☰</button></div>
-
-    <div class="logo-wrap">
-        <div class="logo-emblem"><div class="logo-leaf"></div></div>
-        <h1 style="margin-top:10px">Wong's Kitchen</h1>
-    </div>
-
-    <div class="content">
-        <div class="section-grid" id="mainGrid"></div>
-
-        <div id="sectionView" style="display:none; position:relative;">
-            <div class="circle-x" style="top:0; right:0;" onclick="goHome()">×</div>
-            <h2 id="viewTitle" style="margin-bottom:20px;">Section</h2>
-            <div id="itemList"></div>
-        </div>
-
-        <div id="plannerView" style="display:none; position:relative;">
-            <div class="circle-x" style="top:0; right:0;" onclick="goHome()">×</div>
-            <h2 style="margin-bottom:20px;">Menu Planner</h2>
-            <div id="plannerContent"></div>
-        </div>
-    </div>
-
-    <button class="fab" onclick="openModal()">+</button>
-</div>
-
-<div id="mealModal" class="modal">
-    <div class="modal-content">
-        <div class="circle-x" onclick="closeMealModal()">×</div>
-        <h2 id="mealHead">Meal Details</h2>
-        <input type="text" id="mealDish" placeholder="Dish Name">
-        <textarea id="mealNotes" placeholder="Notes..." rows="3"></textarea>
-        <button class="btn-save" onclick="saveMeal()">Save Plan</button>
-        <button class="btn-save" style="background:#888;" onclick="copyMeal()">Copy</button>
-        <button id="pasteBtn" class="btn-save" style="display:none; background:var(--pop);" onclick="pasteMeal()">Paste Clipboard</button>
-    </div>
-</div>
-
-<div id="itemModal" class="modal">
-    <div class="modal-content">
-        <div class="circle-x" onclick="closeModal()">×</div>
-        <h2 id="itemModalHead">Add Item</h2>
-        <input type="text" id="itemName" placeholder="Name">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <input type="number" id="itemQty" placeholder="Qty">
-            <input type="text" id="itemUnit" placeholder="Unit">
-        </div>
-        <select id="itemSec"></select>
-        <div style="display:flex; gap:15px; background:#f1efea; padding:10px; border-radius:12px; margin:10px 0;">
-            <label style="font-size:12px;"><input type="checkbox" id="checkLow"> Low</label>
-            <label style="font-size:12px;"><input type="checkbox" id="checkShop"> Shop</label>
-        </div>
-        <button class="btn-save" onclick="saveItem()">Save Item</button>
-        <button id="delBtn" onclick="deleteItem()" style="display:none; width:100%; background:none; border:none; color:maroon; margin-top:15px; font-weight:700;">DELETE</button>
-    </div>
-</div>
-
-<script>
-    let inventory = JSON.parse(localStorage.getItem('wk_inv')) || [];
-    let categories = JSON.parse(localStorage.getItem('wk_sec')) || ["Fridge", "Pantry", "Freezer"];
-    let weekPlans = JSON.parse(localStorage.getItem('wk_plans')) || {};
-    let clipboard = null;
-    let curIdx = null;
-
-    function renderHome() {
-        document.getElementById('app').classList.remove('planner-mode');
-        document.getElementById('mainGrid').style.display = 'grid';
-        document.getElementById('sectionView').style.display = 'none';
-        document.getElementById('plannerView').style.display = 'none';
-        const grid = document.getElementById('mainGrid');
-        grid.innerHTML = categories.map(c => `
-            <div class="section-card" onclick="openSection('${c}')">
-                <b style="font-size:18px;">${c}</b><br>
-                <small>${inventory.filter(i=>i.section===c).length} ITEMS</small>
-            </div>
-        `).join('');
-    }
-
-    function openSection(name) {
-        document.getElementById('mainGrid').style.display = 'none';
-        document.getElementById('sectionView').style.display = 'block';
-        document.getElementById('viewTitle').innerText = name;
-        const list = document.getElementById('itemList');
-        list.innerHTML = inventory.filter(i => i.section === name).map(item => {
-            const idx = inventory.indexOf(item);
-            return `<div class="item-row" style="background:white; padding:15px; border-radius:15px; margin-bottom:10px; display:flex; justify-content:space-between;" onclick="openModal(${idx})">
-                        <div><b>${item.name}</b><br><small style="color:gray">${item.qty} ${item.unit}</small></div>
-                        <span>✎</span>
-                    </div>`;
-        }).join('');
-    }
-
-    /* Planner */
-    function openPlanner() {
-        if(document.getElementById('sidePanel').classList.contains('open')) toggleMenu();
-        document.getElementById('app').classList.add('planner-mode');
-        document.getElementById('mainGrid').style.display = 'none';
-        document.getElementById('sectionView').style.display = 'none';
-        document.getElementById('plannerView').style.display = 'block';
-        renderPlanner();
-    }
-
-    function renderPlanner() {
-        const cont = document.getElementById('plannerContent');
-        cont.innerHTML = '';
-        const weeks = ["Current Week", "Next Week"];
-        weeks.forEach(w => {
-            const drop = document.createElement('div');
-            drop.className = 'planner-drop';
-            drop.onclick = () => drop.nextElementSibling.classList.toggle('active');
-            drop.innerHTML = `<span>${w}</span><span>▾</span>`;
-            const inner = document.createElement('div');
-            inner.className = 'accordion-content';
-            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(day => {
-                const key = `${w}-${day}`;
-                const data = weekPlans[key] || {};
-                const box = document.createElement('div');
-                box.className = 'day-box';
-                box.innerHTML = `<h4>${day}</h4>`;
-                ["Lunch", "Dinner"].forEach(type => {
-                    const meal = data[type] || { dish: '—' };
-                    const slot = document.createElement('div');
-                    slot.className = 'meal-slot';
-                    slot.onclick = () => openMealModal(key, type);
-                    slot.innerHTML = `<b>${type}:</b> ${meal.dish}`;
-                    box.appendChild(slot);
-                });
-                inner.appendChild(box);
+        function App() {
+            const [items, setItems] = useState(() => {
+                const saved = localStorage.getItem('wongsHouseItems');
+                if (saved) return JSON.parse(saved);
+                return [
+                    { id: '1', name: 'Almond Milk', qty: 1, threshold: 1, store: "Trader Joe's", broadArea: "Kitchen", section: "Fridge", notes: "Unsweetened vanilla", addedAt: Date.now() },
+                    { id: '2', name: 'Eggs', qty: 12, threshold: 6, store: 'Costco', broadArea: "Kitchen", section: "Fridge", notes: "", addedAt: Date.now() },
+                    { id: '3', name: 'Apples', qty: 2, threshold: 3, store: 'Any Store', broadArea: "Kitchen", section: "Produce", notes: "Fuji or Honeycrisp", addedAt: Date.now() },
+                    { id: '4', name: 'Garlic', qty: 0, threshold: 2, store: 'Any Store', broadArea: "Kitchen", section: "Produce", notes: "", addedAt: Date.now() },
+                    { id: '5', name: 'Paper Towels', qty: 1, threshold: 2, store: 'Target', broadArea: "Kitchen", section: "Household Essentials", notes: "Mega roll pack", addedAt: Date.now() },
+                    { id: '6', name: 'Disinfectant Spray', qty: 2, threshold: 1, store: 'Target', broadArea: "Cleaning", section: "Surface Cleaners", notes: "Lemon scent", addedAt: Date.now() }
+                ];
             });
-            cont.appendChild(drop); cont.appendChild(inner);
-        });
-    }
 
-    function openMealModal(key, type) {
-        window.activeMealKey = key; window.activeMealType = type;
-        const data = (weekPlans[key] && weekPlans[key][type]) || { dish: '', notes: '' };
-        document.getElementById('mealDish').value = data.dish;
-        document.getElementById('mealNotes').value = data.notes;
-        document.getElementById('pasteBtn').style.display = clipboard ? 'block' : 'none';
-        document.getElementById('mealModal').style.display = 'flex';
-    }
+            const [broadAreas, setBroadAreas] = useState(() => {
+                const saved = localStorage.getItem('wongsHouseBroadAreas');
+                if (saved) return JSON.parse(saved);
+                return DEFAULT_BROAD_AREAS;
+            });
 
-    function saveMeal() {
-        if(!weekPlans[window.activeMealKey]) weekPlans[window.activeMealKey] = {};
-        weekPlans[window.activeMealKey][window.activeMealType] = {
-            dish: document.getElementById('mealDish').value,
-            notes: document.getElementById('mealNotes').value
-        };
-        localStorage.setItem('wk_plans', JSON.stringify(weekPlans));
-        closeMealModal(); renderPlanner();
-    }
+            const [sections, setSections] = useState(() => {
+                const saved = localStorage.getItem('wongsHouseSectionsMap');
+                if (saved) return JSON.parse(saved);
+                return DEFAULT_SECTIONS_MAP;
+            });
 
-    function copyMeal() {
-        clipboard = { dish: document.getElementById('mealDish').value, notes: document.getElementById('mealNotes').value };
-        alert("Copied!");
-    }
+            const [stores, setStores] = useState(() => {
+                const saved = localStorage.getItem('wongsHouseStores');
+                if (saved) return JSON.parse(saved);
+                return DEFAULT_STORES;
+            });
 
-    function pasteMeal() {
-        document.getElementById('mealDish').value = clipboard.dish;
-        document.getElementById('mealNotes').value = clipboard.notes;
-        saveMeal();
-    }
+            const [activeTab, setActiveTab] = useState('home');
+            const [selectedBroadArea, setSelectedBroadArea] = useState(null);
+            const [menuOpen, setMenuOpen] = useState(false);
+            const [settingsTab, setSettingsTab] = useState('areas');
 
-    /* Standard Modals */
-    function openModal(idx = null) {
-        curIdx = idx;
-        document.getElementById('itemSec').innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        if(idx !== null) {
-            const i = inventory[idx];
-            document.getElementById('itemName').value = i.name;
-            document.getElementById('itemQty').value = i.qty;
-            document.getElementById('itemUnit').value = i.unit;
-            document.getElementById('itemSec').value = i.section;
-            document.getElementById('checkLow').checked = i.isLow;
-            document.getElementById('checkShop').checked = i.onShop;
-            document.getElementById('delBtn').style.display = 'block';
-        } else {
-            document.querySelectorAll('#itemModal input').forEach(el => { if(el.type !== 'checkbox') el.value = ''; });
-            document.getElementById('delBtn').style.display = 'none';
+            const [modalMode, setModalMode] = useState(null);
+            const [editingItem, setEditingItem] = useState(null);
+
+            const [collapsedSections, setCollapsedSections] = useState({});
+            const [collapsedStores, setCollapsedStores] = useState({});
+
+            useEffect(() => {
+                localStorage.setItem('wongsHouseItems', JSON.stringify(items));
+            }, [items]);
+
+            useEffect(() => {
+                localStorage.setItem('wongsHouseBroadAreas', JSON.stringify(broadAreas));
+            }, [broadAreas]);
+
+            useEffect(() => {
+                localStorage.setItem('wongsHouseSectionsMap', JSON.stringify(sections));
+            }, [sections]);
+
+            useEffect(() => {
+                localStorage.setItem('wongsHouseStores', JSON.stringify(stores));
+            }, [stores]);
+
+            const updateQty = (id, delta) => {
+                setItems(prev => prev.map(item => {
+                    if (item.id === id) {
+                        return { ...item, qty: Math.max(0, item.qty + delta) };
+                    }
+                    return item;
+                }));
+            };
+
+            const saveItem = (savedItem) => {
+                if (modalMode === 'add') {
+                    setItems(prev => {
+                        const existing = prev.find(i => i.name.toLowerCase() === savedItem.name.toLowerCase() && i.store === savedItem.store && i.section === savedItem.section);
+                        if (existing) {
+                            return prev.map(i => i.id === existing.id ? { ...i, qty: i.qty + savedItem.qty, threshold: savedItem.threshold, notes: savedItem.notes } : i);
+                        }
+                        return [{ ...savedItem, id: Date.now().toString(), addedAt: Date.now() }, ...prev];
+                    });
+                } else if (modalMode === 'edit') {
+                    setItems(prev => prev.map(i => i.id === savedItem.id ? savedItem : i));
+                }
+            };
+
+            const deleteItem = (id) => {
+                if (confirm('Remove this item completely from your list?')) {
+                    setItems(prev => prev.filter(i => i.id !== id));
+                }
+            };
+
+            const toggleSectionCollapse = (sec) => {
+                setCollapsedSections(prev => ({ ...prev, [sec]: !prev[sec] }));
+            };
+
+            const toggleStoreCollapse = (store) => {
+                setCollapsedStores(prev => ({ ...prev, [store]: !prev[store] }));
+            };
+
+            const addSectionToArea = (broadArea, newSec) => {
+                const trimmed = newSec.trim();
+                if (!trimmed) return;
+                setSections(prev => {
+                    const currentList = prev[broadArea] || [];
+                    if (currentList.includes(trimmed)) return prev;
+                    return { ...prev, [broadArea]: [...currentList, trimmed] };
+                });
+            };
+
+            return (
+                <div className="min-h-screen pb-16 max-w-md mx-auto bg-japandi-bg relative font-sans text-japandi-text selection:bg-japandi-sage selection:text-white shadow-2xl overflow-hidden font-normal">
+                    
+                    <header className="pt-safe-area pt-14 pb-4 px-6 sticky top-0 bg-japandi-bg/95 backdrop-blur-md z-10 border-b border-japandi-border/60 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-xl font-medium tracking-tight text-japandi-text">
+                                Wong's House
+                            </h1>
+                            <p className="text-xs text-japandi-muted font-normal mt-0.5">
+                                {activeTab === 'home' && selectedBroadArea ? `${selectedBroadArea} Inventory` : 'organization!'}
+                            </p>
+                        </div>
+                        <button 
+                            onClick={() => setMenuOpen(true)}
+                            className="p-2.5 bg-white border border-japandi-border rounded-xl text-japandi-text shadow-sm hover:bg-japandi-bg active:scale-95 transition-all"
+                            title="Open Menu"
+                        >
+                            <IconMenu />
+                        </button>
+                    </header>
+
+                    <main className="px-5 py-4">
+                        {activeTab === 'home' ? (
+                            selectedBroadArea === null ? (
+                                <BroadAreasDashboard 
+                                    broadAreas={broadAreas}
+                                    sections={sections}
+                                    items={items}
+                                    onSelectArea={(area) => setSelectedBroadArea(area)}
+                                />
+                            ) : (
+                                <BroadAreaDetailView 
+                                    broadArea={selectedBroadArea}
+                                    sections={sections[selectedBroadArea] || []}
+                                    items={items}
+                                    onBack={() => setSelectedBroadArea(null)}
+                                    updateQty={updateQty}
+                                    deleteItem={deleteItem}
+                                    onEdit={(item) => { setEditingItem(item); setModalMode('edit'); }}
+                                    collapsedSections={collapsedSections}
+                                    toggleSectionCollapse={toggleSectionCollapse}
+                                />
+                            )
+                        ) : (
+                            <ShoppingListView 
+                                items={items} 
+                                updateQty={updateQty}
+                                onEdit={(item) => { setEditingItem(item); setModalMode('edit'); }}
+                                collapsedStores={collapsedStores}
+                                toggleStoreCollapse={toggleStoreCollapse}
+                            />
+                        )}
+                    </main>
+
+                    <button 
+                        onClick={() => { setEditingItem(null); setModalMode('add'); }}
+                        className="fixed bottom-20 right-6 w-14 h-14 bg-japandi-sage text-white rounded-full shadow-lg shadow-japandi-sage/30 flex items-center justify-center hover:bg-[#758472] active:scale-90 transition-transform z-20"
+                        title="Add Item"
+                    >
+                        <IconPlus />
+                    </button>
+
+                    <nav className="fixed bottom-0 w-full max-w-md bg-japandi-card border-t border-japandi-border flex justify-around items-center py-1.5 pb-safe-area shadow-[0_-10px_30px_rgba(0,0,0,0.04)] z-20">
+                        <button 
+                            onClick={() => { setActiveTab('home'); setSelectedBroadArea(null); }}
+                            className={`flex flex-col items-center p-2.5 transition-colors ${activeTab === 'home' ? 'text-japandi-sage' : 'text-japandi-muted'}`}
+                        >
+                            <IconHome />
+                            <span className="text-[11px] font-normal mt-0.5">Inventory</span>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('shopping')}
+                            className={`flex flex-col items-center p-2.5 transition-colors ${activeTab === 'shopping' ? 'text-japandi-burgundy' : 'text-japandi-muted'}`}
+                        >
+                            <div className="relative">
+                                <IconList />
+                                {items.filter(i => i.qty <= i.threshold).length > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-japandi-burgundy rounded-full border border-japandi-card"></span>
+                                )}
+                            </div>
+                            <span className="text-[11px] font-normal mt-0.5">Shopping</span>
+                        </button>
+                    </nav>
+
+                    {menuOpen && (
+                        <MenuDrawer 
+                            onClose={() => setMenuOpen(false)}
+                            broadAreas={broadAreas}
+                            setBroadAreas={setBroadAreas}
+                            sections={sections}
+                            setSections={setSections}
+                            stores={stores}
+                            setStores={setStores}
+                            settingsTab={settingsTab}
+                            setSettingsTab={setSettingsTab}
+                            onNavigateArea={(area) => { setActiveTab('home'); setSelectedBroadArea(area); setMenuOpen(false); }}
+                        />
+                    )}
+
+                    {modalMode && (
+                        <ItemModal 
+                            mode={modalMode}
+                            initialData={editingItem}
+                            broadAreas={broadAreas}
+                            sectionsMap={sections}
+                            availableStores={stores}
+                            onClose={() => setModalMode(null)} 
+                            onSave={saveItem}
+                            onAddSection={addSectionToArea}
+                        />
+                    )}
+                </div>
+            );
         }
-        document.getElementById('itemModal').style.display = 'flex';
-    }
 
-    function saveItem() {
-        const data = {
-            name: document.getElementById('itemName').value,
-            qty: document.getElementById('itemQty').value,
-            unit: document.getElementById('itemUnit').value,
-            section: document.getElementById('itemSec').value,
-            isLow: document.getElementById('checkLow').checked,
-            onShop: document.getElementById('checkShop').checked
-        };
-        if(curIdx !== null) inventory[curIdx] = data;
-        else inventory.push(data);
-        localStorage.setItem('wk_inv', JSON.stringify(inventory));
-        closeModal(); renderHome();
-    }
+        function BroadAreasDashboard({ broadAreas, sections, items, onSelectArea }) {
+            return (
+                <div className="space-y-4 pb-12">
+                    <h2 className="text-xs font-medium text-japandi-muted tracking-wider uppercase px-1">
+                        Home Areas
+                    </h2>
+                    <div className="grid grid-cols-1 gap-4">
+                        {broadAreas.map(area => {
+                            const areaSections = sections[area] || [];
+                            const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === area);
+                            const totalItems = areaItems.length;
+                            const lowItems = areaItems.filter(i => i.qty <= i.threshold).length;
 
-    function deleteItem() { inventory.splice(curIdx, 1); localStorage.setItem('wk_inv', JSON.stringify(inventory)); closeModal(); renderHome(); }
-    function changeTheme(t) { document.body.className = t; localStorage.setItem('wk_theme', t); }
-    function toggleMenu() { document.getElementById('sidePanel').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidePanel').classList.contains('open') ? 'block' : 'none'; renderSidebar(); }
-    function toggleAccordion(id) { document.getElementById(id).classList.toggle('active'); }
-    function renderSidebar() {
-        document.getElementById('lowItems').innerHTML = inventory.filter(i=>i.isLow).map(i => `<div style="padding:5px 0;">• ${i.name}</div>`).join('');
-        document.getElementById('shopItems').innerHTML = inventory.filter(i=>i.onShop).map(i => `<div style="padding:5px 0;">• ${i.name}</div>`).join('');
-    }
-    function goHome() { renderHome(); }
-    function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
-    function closeMealModal() { document.getElementById('mealModal').style.display = 'none'; }
+                            return (
+                                <div 
+                                    key={area}
+                                    onClick={() => onSelectArea(area)}
+                                    className="bg-white rounded-2xl p-5 shadow-sm border border-japandi-border/70 hover:border-japandi-sage cursor-pointer transition-all flex items-center justify-between group active:scale-[0.98]"
+                                >
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-medium text-japandi-text group-hover:text-japandi-sage transition-colors">
+                                            {area}
+                                        </h3>
+                                        <p className="text-xs text-japandi-muted font-normal">
+                                            {areaSections.length} sections · {totalItems} items
+                                            {lowItems > 0 && <span className="text-japandi-burgundy ml-2 font-medium">({lowItems} low)</span>}
+                                        </p>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-xl bg-japandi-bg flex items-center justify-center text-japandi-muted group-hover:bg-japandi-sage group-hover:text-white transition-all">
+                                        <IconChevronRight />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
 
-    document.body.className = localStorage.getItem('wk_theme') || 'theme-sage';
-    renderHome();
-</script>
+        function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse }) {
+            const [search, setSearch] = useState('');
+
+            const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === broadArea);
+            const filtered = areaItems.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+
+            const grouped = sections.reduce((acc, sec) => {
+                acc[sec] = filtered.filter(i => (i.section || sections[0]) === sec);
+                return acc;
+            }, {});
+
+            const uncategorized = filtered.filter(i => !sections.includes(i.section));
+            if (uncategorized.length > 0) {
+                grouped['Uncategorized'] = uncategorized;
+            }
+
+            const activeSectionsList = Object.keys(grouped);
+
+            return (
+                <div className="space-y-4 pb-12">
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={onBack}
+                            className="px-3 py-1.5 bg-white border border-japandi-border rounded-xl text-xs font-medium text-japandi-muted hover:text-japandi-text flex items-center gap-1 shadow-sm"
+                        >
+                            ← Back
+                        </button>
+                        <h2 className="font-medium text-base text-japandi-text">{broadArea}</h2>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-japandi-muted">
+                            <IconSearch />
+                        </div>
+                        <input 
+                            type="text" 
+                            placeholder={`Search ${broadArea} items...`} 
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-japandi-border rounded-xl shadow-sm focus:ring-2 focus:ring-japandi-sage outline-none transition-all placeholder:text-japandi-muted/60 text-sm font-normal"
+                        />
+                    </div>
+
+                    <div className="space-y-3 mt-4">
+                        {activeSectionsList.map(section => {
+                            const sectionItems = grouped[section];
+                            const isCollapsed = collapsedSections[section];
+                            const lowCount = sectionItems.filter(i => i.qty <= i.threshold).length;
+
+                            return (
+                                <div key={section} className="bg-white rounded-xl shadow-sm border border-japandi-border/70 overflow-hidden transition-all">
+                                    <div 
+                                        onClick={() => toggleSectionCollapse(section)}
+                                        className="p-4 flex items-center justify-between cursor-pointer hover:bg-japandi-bg/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-japandi-muted">
+                                                {isCollapsed ? <IconChevronRight /> : <IconChevronDown />}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium text-sm text-japandi-text">{section}</h3>
+                                                <p className="text-xs text-japandi-muted font-normal mt-0.5">
+                                                    {sectionItems.length} {sectionItems.length === 1 ? 'item' : 'items'}
+                                                    {lowCount > 0 && <span className="text-japandi-burgundy ml-2 font-medium">({lowCount} low)</span>}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {!isCollapsed && (
+                                        <div className="px-4 pb-4 pt-1 border-t border-japandi-border/40 space-y-2.5">
+                                            {sectionItems.length === 0 ? (
+                                                <p className="text-xs text-japandi-muted italic py-3 text-center">No items in this section.</p>
+                                            ) : (
+                                                sectionItems.map(item => (
+                                                    <div 
+                                                        key={item.id} 
+                                                        onClick={() => onEdit(item)}
+                                                        className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''}`}
+                                                    >
+                                                        <div className="flex-1 min-w-0 pr-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
+                                                                    {item.name}
+                                                                </h4>
+                                                                {item.qty <= item.threshold && (
+                                                                    <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                                            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-japandi-border/80 shadow-sm">
+                                                                <button 
+                                                                    onClick={() => updateQty(item.id, -1)}
+                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-muted hover:text-japandi-text active:scale-95"
+                                                                >
+                                                                    <IconMinus />
+                                                                </button>
+                                                                <span className="w-6 text-center font-normal text-xs text-japandi-text">{item.qty}</span>
+                                                                <button 
+                                                                    onClick={() => updateQty(item.id, 1)}
+                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-sage hover:text-[#758472] active:scale-95"
+                                                                >
+                                                                    <IconPlus />
+                                                                </button>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => deleteItem(item.id)}
+                                                                className="text-japandi-muted hover:text-red-500 p-1 transition-colors"
+                                                                title="Delete item"
+                                                            >
+                                                                <IconTrash />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        function ShoppingListView({ items, updateQty, onEdit, collapsedStores, toggleStoreCollapse }) {
+            const neededItems = items.filter(i => i.qty <= i.threshold);
+            
+            const grouped = neededItems.reduce((acc, item) => {
+                const store = item.store || 'Any Store';
+                if (!acc[store]) acc[store] = [];
+                acc[store].push(item);
+                return acc;
+            }, {});
+
+            if (neededItems.length === 0) {
+                return (
+                    <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-japandi-border/60 mt-4">
+                        <h3 className="text-base font-medium text-japandi-text">All stocked up!</h3>
+                        <p className="text-japandi-muted text-xs mt-1 font-normal">Nothing is below its restock threshold.</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-4 pb-12">
+                    {Object.keys(grouped).sort().map(store => {
+                        const storeItems = grouped[store];
+                        const isCollapsed = collapsedStores[store];
+
+                        return (
+                            <div key={store} className="bg-white rounded-xl shadow-sm border border-japandi-border/70 overflow-hidden">
+                                <div 
+                                    onClick={() => toggleStoreCollapse(store)}
+                                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-japandi-bg/50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-japandi-muted">
+                                            {isCollapsed ? <IconChevronRight /> : <IconChevronDown />}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-xs text-japandi-text uppercase tracking-wider">{store}</h3>
+                                            <p className="text-[11px] text-japandi-muted font-normal mt-0.5">{storeItems.length} {storeItems.length === 1 ? 'item' : 'items'} to buy</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {!isCollapsed && (
+                                    <div className="px-4 pb-4 pt-1 border-t border-japandi-border/40 space-y-3">
+                                        {storeItems.map(item => {
+                                            const recommendedBuy = Math.max(1, (item.threshold + 1) - item.qty);
+                                            
+                                            return (
+                                                <div 
+                                                    key={item.id} 
+                                                    onClick={() => onEdit(item)}
+                                                    className="p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all"
+                                                >
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0 pr-3">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); updateQty(item.id, recommendedBuy); }} 
+                                                            className="w-5 h-5 rounded flex items-center justify-center border border-japandi-muted active:scale-90 text-transparent hover:text-japandi-sage hover:border-japandi-sage transition-all bg-white flex-shrink-0"
+                                                            title="Mark as purchased"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                                        </button>
+                                                        <div className="truncate">
+                                                            <h4 className="font-normal text-sm text-japandi-text truncate">{item.name}</h4>
+                                                            <p className="text-[11px] text-japandi-muted mt-0.5">
+                                                                Have: {item.qty} / Min: {item.threshold}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <span className="text-xs font-medium text-japandi-sage bg-japandi-sage/10 px-2.5 py-1 rounded-md border border-japandi-sage/20">
+                                                            Buy {recommendedBuy}
+                                                        </span>
+                                                        <span className="text-japandi-muted">
+                                                            <IconEdit />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        function MenuDrawer({ onClose, broadAreas, setBroadAreas, sections, setSections, stores, setStores, settingsTab, setSettingsTab, onNavigateArea }) {
+            const [selectedAreaForSections, setSelectedAreaForSections] = useState(broadAreas[0]);
+            const [newVal, setNewVal] = useState('');
+            const [editingIndex, setEditingIndex] = useState(null);
+            const [editVal, setEditVal] = useState('');
+
+            const handleAdd = (e) => {
+                e.preventDefault();
+                const trimmed = newVal.trim();
+                if (!trimmed) return;
+
+                if (settingsTab === 'areas') {
+                    if (!broadAreas.includes(trimmed)) {
+                        setBroadAreas([...broadAreas, trimmed]);
+                        if (!sections[trimmed]) {
+                            setSections(prev => ({ ...prev, [trimmed]: [] }));
+                        }
+                    }
+                } else if (settingsTab === 'sections') {
+                    const currentList = sections[selectedAreaForSections] || [];
+                    if (!currentList.includes(trimmed)) {
+                        setSections(prev => ({ ...prev, [selectedAreaForSections]: [...currentList, trimmed] }));
+                    }
+                } else {
+                    if (!stores.includes(trimmed)) {
+                        setStores([...stores, trimmed]);
+                    }
+                }
+                setNewVal('');
+            };
+
+            const handleDelete = (targetItem) => {
+                if (settingsTab === 'areas') {
+                    if (broadAreas.length <= 1) {
+                        alert('You must have at least one broad area.');
+                        return;
+                    }
+                    if (confirm(`Delete broad area "${targetItem}" and its sections?`)) {
+                        setBroadAreas(broadAreas.filter(a => a !== targetItem));
+                        const copy = { ...sections };
+                        delete copy[targetItem];
+                        setSections(copy);
+                    }
+                } else if (settingsTab === 'sections') {
+                    const currentList = sections[selectedAreaForSections] || [];
+                    setSections(prev => ({ ...prev, [selectedAreaForSections]: currentList.filter(s => s !== targetItem) }));
+                } else {
+                    if (stores.length <= 1) {
+                        alert('You must have at least one store.');
+                        return;
+                    }
+                    if (confirm(`Delete store "${targetItem}"?`)) {
+                        setStores(stores.filter(s => s !== targetItem));
+                    }
+                }
+            };
+
+            const handleMoveSection = (index, direction) => {
+                const currentList = [...(sections[selectedAreaForSections] || [])];
+                const targetIndex = direction === 'up' ? index - 1 : index + 1;
+                if (targetIndex < 0 || targetIndex >= currentList.length) return;
+
+                const temp = currentList[index];
+                currentList[index] = currentList[targetIndex];
+                currentList[targetIndex] = temp;
+
+                setSections(prev => ({ ...prev, [selectedAreaForSections]: currentList }));
+            };
+
+            const handleSaveEdit = (oldVal) => {
+                const trimmed = editVal.trim();
+                if (!trimmed) return;
+
+                if (settingsTab === 'areas') {
+                    if (broadAreas.includes(trimmed)) { setEditingIndex(null); return; }
+                    setBroadAreas(broadAreas.map(a => a === oldVal ? trimmed : a));
+                    const copy = { ...sections };
+                    copy[trimmed] = copy[oldVal];
+                    delete copy[oldVal];
+                    setSections(copy);
+                } else if (settingsTab === 'sections') {
+                    const currentList = sections[selectedAreaForSections] || [];
+                    if (currentList.includes(trimmed)) { setEditingIndex(null); return; }
+                    setSections(prev => ({ ...prev, [selectedAreaForSections]: currentList.map(s => s === oldVal ? trimmed : s) }));
+                } else {
+                    if (stores.includes(trimmed)) { setEditingIndex(null); return; }
+                    setStores(stores.map(st => st === oldVal ? trimmed : st));
+                }
+                setEditingIndex(null);
+                setEditVal('');
+            };
+
+            return (
+                <div className="fixed inset-0 bg-japandi-text/30 backdrop-blur-sm z-50 flex justify-end">
+                    <div className="bg-white w-full max-w-xs h-full shadow-2xl flex flex-col animate-slide-right pb-safe-area">
+                        <div className="p-5 border-b border-japandi-border flex justify-between items-center bg-japandi-bg">
+                            <h2 className="font-medium text-base text-japandi-text">Settings & Menu</h2>
+                            <button onClick={onClose} className="p-1.5 rounded-lg bg-white border border-japandi-border text-japandi-muted hover:text-japandi-text">
+                                <IconX />
+                            </button>
+                        </div>
+
+                        <div className="p-4 border-b border-japandi-border bg-white">
+                            <p className="text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-2">Quick Jump to Area</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {broadAreas.map(area => (
+                                    <button 
+                                        key={area}
+                                        onClick={() => onNavigateArea(area)}
+                                        className="text-xs font-normal bg-japandi-bg px-2.5 py-1.5 rounded-lg border border-japandi-border hover:bg-japandi-sage hover:text-white transition-all"
+                                    >
+                                        {area}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex border-b border-japandi-border bg-japandi-bg/50 p-2 gap-1">
+                            <button 
+                                onClick={() => { setSettingsTab('areas'); setEditingIndex(null); }}
+                                className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${settingsTab === 'areas' ? 'bg-white shadow-sm text-japandi-text border border-japandi-border' : 'text-japandi-muted'}`}
+                            >
+                                Areas
+                            </button>
+                            <button 
+                                onClick={() => { setSettingsTab('sections'); setEditingIndex(null); }}
+                                className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${settingsTab === 'sections' ? 'bg-white shadow-sm text-japandi-text border border-japandi-border' : 'text-japandi-muted'}`}
+                            >
+                                Sections
+                            </button>
+                            <button 
+                                onClick={() => { setSettingsTab('stores'); setEditingIndex(null); }}
+                                className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${settingsTab === 'stores' ? 'bg-white shadow-sm text-japandi-text border border-japandi-border' : 'text-japandi-muted'}`}
+                            >
+                                Stores
+                            </button>
+                        </div>
+
+                        {settingsTab === 'sections' && (
+                            <div className="p-3 bg-japandi-bg border-b border-japandi-border">
+                                <label className="block text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-1">Select Broad Area</label>
+                                <select 
+                                    value={selectedAreaForSections}
+                                    onChange={e => setSelectedAreaForSections(e.target.value)}
+                                    className="w-full p-2 bg-white border border-japandi-border rounded-lg text-xs font-normal outline-none"
+                                >
+                                    {broadAreas.map(a => <option key={a} value={a}>{a}</option>)}
+                                </select>
+                            </div>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                            <form onSubmit={handleAdd} className="flex gap-2">
+                                <input 
+                                    type="text"
+                                    value={newVal}
+                                    onChange={e => setNewVal(e.target.value)}
+                                    placeholder={settingsTab === 'areas' ? 'New area name...' : settingsTab === 'sections' ? 'New section...' : 'New store...'}
+                                    className="flex-1 p-2.5 text-sm bg-japandi-bg border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal"
+                                />
+                                <button type="submit" className="px-3 bg-japandi-sage text-white rounded-xl text-xs font-medium shadow-sm hover:bg-[#758472]">
+                                    Add
+                                </button>
+                            </form>
+
+                            <div className="space-y-2 mt-2">
+                                {settingsTab === 'areas' && broadAreas.map((item, idx) => (
+                                    <div key={item} className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
+                                        {editingIndex === idx ? (
+                                            <div className="flex gap-2 flex-1 mr-2">
+                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <span className="font-normal text-sm text-japandi-text">{item}</span>
+                                        )}
+                                        {editingIndex !== idx && (
+                                            <div className="flex items-center gap-1">
+                                                <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
+                                                <button onClick={() => handleDelete(item)} className="p-1 text-japandi-muted hover:text-red-500"><IconTrash /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {settingsTab === 'sections' && (sections[selectedAreaForSections] || []).map((item, idx, arr) => (
+                                    <div key={item} className="p-2.5 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
+                                        {editingIndex === idx ? (
+                                            <div className="flex gap-2 flex-1 mr-2">
+                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <span className="font-normal text-xs text-japandi-text">{item}</span>
+                                        )}
+
+                                        {editingIndex !== idx && (
+                                            <div className="flex items-center gap-0.5">
+                                                <button onClick={() => handleMoveSection(idx, 'up')} disabled={idx === 0} className="p-1 text-japandi-muted hover:text-japandi-text disabled:opacity-30" title="Move Up"><IconArrowUp /></button>
+                                                <button onClick={() => handleMoveSection(idx, 'down')} disabled={idx === arr.length - 1} className="p-1 text-japandi-muted hover:text-japandi-text disabled:opacity-30" title="Move Down"><IconArrowDown /></button>
+                                                <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
+                                                <button onClick={() => handleDelete(item)} className="p-1 text-japandi-muted hover:text-red-500"><IconTrash /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {settingsTab === 'stores' && stores.map((item, idx) => (
+                                    <div key={item} className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
+                                        {editingIndex === idx ? (
+                                            <div className="flex gap-2 flex-1 mr-2">
+                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <span className="font-normal text-sm text-japandi-text">{item}</span>
+                                        )}
+                                        {editingIndex !== idx && (
+                                            <div className="flex items-center gap-1">
+                                                <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
+                                                <button onClick={() => handleDelete(item)} className="p-1 text-japandi-muted hover:text-red-500"><IconTrash /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House v2.5</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ItemModal({ mode, initialData, broadAreas, sectionsMap, availableStores, onClose, onSave, onAddSection }) {
+            const [name, setName] = useState(initialData?.name || '');
+            const [qty, setQty] = useState(initialData?.qty ?? 1);
+            const [threshold, setThreshold] = useState(initialData?.threshold ?? 1);
+            const [store, setStore] = useState(initialData?.store || availableStores[0]);
+            const [broadArea, setBroadArea] = useState(initialData?.broadArea || broadAreas[0]);
+            
+            const currentSections = sectionsMap[broadArea] || [];
+            const [section, setSection] = useState(initialData?.section || currentSections[0] || 'General');
+            const [notes, setNotes] = useState(initialData?.notes || '');
+            
+            const [isAddingNewSec, setIsAddingNewSec] = useState(false);
+            const [newSecName, setNewSecName] = useState('');
+
+            const [showSuggestions, setShowSuggestions] = useState(false);
+            const [scanning, setScanning] = useState(false);
+            const scannerRef = useRef(null);
+
+            useEffect(() => {
+                const validSecs = sectionsMap[broadArea] || [];
+                if (!validSecs.includes(section) && validSecs.length > 0) {
+                    setSection(validSecs[0]);
+                }
+            }, [broadArea]);
+
+            const suggestions = useMemo(() => {
+                if (!name) return [];
+                return FOOD_DB.filter(f => f.toLowerCase().includes(name.toLowerCase()) && f.toLowerCase() !== name.toLowerCase()).slice(0, 4);
+            }, [name]);
+
+            const handleBroadAreaChange = (e) => {
+                const newArea = e.target.value;
+                setBroadArea(newArea);
+                const secs = sectionsMap[newArea] || [];
+                if (secs.length > 0) setSection(secs[0]);
+            };
+
+            const handleCreateSectionInline = (e) => {
+                e.preventDefault();
+                const trimmed = newSecName.trim();
+                if (trimmed) {
+                    onAddSection(broadArea, trimmed);
+                    setSection(trimmed);
+                }
+                setIsAddingNewSec(false);
+                setNewSecName('');
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!name.trim()) return;
+                
+                onSave({ 
+                    id: initialData?.id,
+                    name: name.trim(), 
+                    qty, 
+                    threshold, 
+                    store, 
+                    broadArea,
+                    section,
+                    notes 
+                });
+                onClose();
+            };
+
+            const startScanner = () => {
+                setScanning(true);
+                setTimeout(() => {
+                    const html5QrcodeScanner = new Html5QrcodeScanner(
+                        "reader",
+                        { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 },
+                        false
+                    );
+                    html5QrcodeScanner.render(
+                        (decodedText) => {
+                            html5QrcodeScanner.clear();
+                            setScanning(false);
+                            setName("Scanned Item (" + decodedText.slice(-4) + ")");
+                        },
+                        (error) => { /* ignore */ }
+                    );
+                    scannerRef.current = html5QrcodeScanner;
+                }, 150);
+            };
+
+            const stopScanner = () => {
+                if (scannerRef.current) scannerRef.current.clear();
+                setScanning(false);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-japandi-text/20 backdrop-blur-sm z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4">
+                    <div className="bg-white sm:rounded-2xl rounded-t-3xl shadow-2xl w-full max-w-md pb-safe-area animate-slide-up flex flex-col max-h-[90vh]">
+                        
+                        <div className="flex justify-between items-center p-5 border-b border-japandi-border/60">
+                            <h2 className="font-medium text-base text-japandi-text">{mode === 'add' ? 'Add Item' : 'Edit Item'}</h2>
+                            <button onClick={() => { if(scanning) stopScanner(); onClose(); }} className="p-1.5 bg-japandi-bg rounded-md text-japandi-muted hover:text-japandi-text transition-colors">
+                                <IconX />
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto hide-scroll p-5 space-y-4">
+                            {scanning ? (
+                                <div className="mb-4">
+                                    <div id="reader" className="w-full bg-black rounded-xl overflow-hidden mb-4 border border-japandi-border"></div>
+                                    <button type="button" onClick={stopScanner} className="w-full py-3 bg-japandi-bg text-japandi-text rounded-xl font-medium border border-japandi-border">
+                                        Cancel Camera
+                                    </button>
+                                </div>
+                            ) : (
+                                <form id="itemForm" onSubmit={handleSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-japandi-muted uppercase tracking-wider mb-1.5">Item Name</label>
+                                        <div className="flex gap-2 relative">
+                                            <div className="relative flex-1">
+                                                <input 
+                                                    autoFocus={mode === 'add'}
+                                                    type="text" 
+                                                    required
+                                                    value={name}
+                                                    onChange={(e) => {
+                                                        setName(e.target.value);
+                                                        setShowSuggestions(true);
+                                                    }}
+                                                    onFocus={() => setShowSuggestions(true)}
+                                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                                    className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm"
+                                                    placeholder="e.g. Oat Milk"
+                                                />
+                                                {showSuggestions && suggestions.length > 0 && (
+                                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-japandi-border rounded-xl shadow-lg z-50 overflow-hidden text-sm">
+                                                        {suggestions.map(s => (
+                                                            <div 
+                                                                key={s} 
+                                                                className="p-3 hover:bg-japandi-bg cursor-pointer border-b border-japandi-border/40 last:border-0 font-normal"
+                                                                onClick={() => { setName(s); setShowSuggestions(false); }}
+                                                            >
+                                                                {s}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {mode === 'add' && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={startScanner}
+                                                    className="w-[46px] bg-white rounded-xl flex items-center justify-center text-japandi-sage border border-japandi-border hover:bg-japandi-bg transition-colors"
+                                                    title="Scan Barcode"
+                                                >
+                                                    <IconCamera />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-japandi-muted uppercase tracking-wider mb-1.5">Home Area</label>
+                                        <select 
+                                            value={broadArea} 
+                                            onChange={handleBroadAreaChange}
+                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                        >
+                                            {broadAreas.map(a => <option key={a} value={a}>{a}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-japandi-muted uppercase tracking-wider mb-1.5">Section</label>
+                                        {!isAddingNewSec ? (
+                                            <div className="flex gap-2">
+                                                <select 
+                                                    value={section} 
+                                                    onChange={(e) => setSection(e.target.value)}
+                                                    className="flex-1 p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                                >
+                                                    {(sectionsMap[broadArea] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setIsAddingNewSec(true)}
+                                                    className="px-3.5 bg-japandi-bg border border-japandi-border rounded-xl text-xs font-medium text-japandi-text hover:bg-japandi-border transition-colors"
+                                                >
+                                                    + New
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="text"
+                                                    autoFocus
+                                                    value={newSecName}
+                                                    onChange={e => setNewSecName(e.target.value)}
+                                                    placeholder="New section name..."
+                                                    className="flex-1 p-2.5 bg-white border border-japandi-border rounded-xl text-sm outline-none font-normal"
+                                                />
+                                                <button 
+                                                    type="button"
+                                                    onClick={handleCreateSectionInline}
+                                                    className="px-3 bg-japandi-sage text-white rounded-xl text-xs font-medium"
+                                                >
+                                                    Add
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setIsAddingNewSec(false)}
+                                                    className="px-2 bg-japandi-bg text-japandi-muted rounded-xl border border-japandi-border"
+                                                >
+                                                    <IconX />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-japandi-bg p-3 rounded-xl border border-japandi-border/60 flex flex-col items-center">
+                                            <label className="text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-2">Quantity</label>
+                                            <div className="flex items-center gap-2">
+                                                <button type="button" onClick={() => setQty(Math.max(0, qty - 1))} className="w-7 h-7 bg-white rounded flex items-center justify-center text-japandi-muted shadow-sm border border-japandi-border/50"><IconMinus /></button>
+                                                <input type="number" value={qty} onChange={e => setQty(parseInt(e.target.value)||0)} className="w-10 text-center font-normal text-base bg-transparent outline-none hide-scroll" />
+                                                <button type="button" onClick={() => setQty(qty + 1)} className="w-7 h-7 bg-white rounded flex items-center justify-center text-japandi-muted shadow-sm border border-japandi-border/50"><IconPlus /></button>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-japandi-bg p-3 rounded-xl border border-japandi-border/60 flex flex-col items-center">
+                                            <label className="text-[10px] font-medium text-japandi-burgundy uppercase tracking-wider mb-2">Alert Threshold</label>
+                                            <div className="flex items-center gap-2">
+                                                <button type="button" onClick={() => setThreshold(Math.max(0, threshold - 1))} className="w-7 h-7 bg-white rounded flex items-center justify-center text-japandi-muted shadow-sm border border-japandi-border/50"><IconMinus /></button>
+                                                <input type="number" value={threshold} onChange={e => setThreshold(parseInt(e.target.value)||0)} className="w-10 text-center font-normal text-base bg-transparent outline-none hide-scroll" />
+                                                <button type="button" onClick={() => setThreshold(threshold + 1)} className="w-7 h-7 bg-white rounded flex items-center justify-center text-japandi-muted shadow-sm border border-japandi-border/50"><IconPlus /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-japandi-muted uppercase tracking-wider mb-1.5">Store</label>
+                                        <select 
+                                            value={store} 
+                                            onChange={(e) => setStore(e.target.value)}
+                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm appearance-none"
+                                        >
+                                            {availableStores.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-japandi-muted uppercase tracking-wider mb-1.5">Notes (Optional)</label>
+                                        <textarea
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            rows="2"
+                                            placeholder="Brands, sizes, or expiration dates..."
+                                            className="w-full p-3 bg-white border border-japandi-border rounded-xl focus:ring-2 focus:ring-japandi-sage outline-none font-normal text-sm resize-none"
+                                        ></textarea>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+
+                        <div className="p-5 border-t border-japandi-border/60 bg-white sm:rounded-b-2xl">
+                            <button type="submit" form="itemForm" className="w-full py-3.5 bg-[#2c2b29] text-white rounded-xl font-medium text-sm shadow-md hover:bg-black transition-all">
+                                {mode === 'add' ? 'Save New Item' : 'Update Item'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
