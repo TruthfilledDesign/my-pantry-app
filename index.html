@@ -54,6 +54,7 @@
             background-color: #efece4; 
             color: #2c2b29; 
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         .pb-safe-area { padding-bottom: env(safe-area-inset-bottom, 12px); }
         .pt-safe-area { padding-top: env(safe-area-inset-top, 0px); }
@@ -71,6 +72,8 @@
         }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        .touch-grab { touch-action: none; }
     </style>
 </head>
 <body>
@@ -138,7 +141,7 @@
         const IconChevronDown = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
         const IconChevronRight = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7"/></svg>;
         const IconEdit = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
-        const IconGrip = () => <svg className="w-4 h-4 text-japandi-muted/60 mr-2 flex-shrink-0 cursor-grab active:cursor-grabbing" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/></svg>;
+        const IconGrip = () => <svg className="w-5 h-5 text-japandi-muted/70 mr-1.5 flex-shrink-0 cursor-grab active:cursor-grabbing touch-grab" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/></svg>;
 
         // --- Sub-components ---
         function MealPlanningView({ meals, items, stores, onAddMeal, onEditMeal, onDeleteMeal, onAddMultipleQuickItems }) {
@@ -562,6 +565,7 @@
 
         function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse, onReorderItems }) {
             const [search, setSearch] = useState('');
+            const [draggingItem, setDraggingItem] = useState(null); // { section, index }
 
             const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === broadArea);
             const filtered = areaItems.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
@@ -577,6 +581,41 @@
             }
 
             const activeSectionsList = Object.keys(grouped);
+
+            // Pointer Event Handlers for Touch & Mouse Drag
+            const handlePointerDown = (e, sectionName, idx) => {
+                e.stopPropagation();
+                const target = e.currentTarget;
+                target.setPointerCapture(e.pointerId);
+                setDraggingItem({ section: sectionName, index: idx, startY: e.clientY, currentY: e.clientY });
+            };
+
+            const handlePointerMove = (e, sectionName) => {
+                if (!draggingItem || draggingItem.section !== sectionName) return;
+                e.preventDefault();
+                setDraggingItem(prev => ({ ...prev, currentY: e.clientY }));
+            };
+
+            const handlePointerUp = (e, sectionName, itemsList) => {
+                if (!draggingItem || draggingItem.section !== sectionName) return;
+                e.stopPropagation();
+                
+                try {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch (err) {}
+
+                // Find element under pointer
+                const elem = document.elementFromPoint(e.clientX, e.clientY);
+                const rowElem = elem ? elem.closest('[data-item-index]') : null;
+                
+                if (rowElem) {
+                    const targetIdx = parseInt(rowElem.getAttribute('data-item-index'));
+                    if (!isNaN(targetIdx) && targetIdx !== draggingItem.index) {
+                        onReorderItems(sectionName, draggingItem.index, targetIdx);
+                    }
+                }
+                setDraggingItem(null);
+            };
 
             return (
                 <div className="space-y-4 pb-12">
@@ -634,64 +673,69 @@
                                             {sectionItems.length === 0 ? (
                                                 <p className="text-xs text-japandi-muted italic py-3 text-center">No items in this section.</p>
                                             ) : (
-                                                sectionItems.map((item, idx) => (
-                                                    <div 
-                                                        key={item.id} 
-                                                        draggable
-                                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
-                                                        onDragOver={(e) => e.preventDefault()}
-                                                        onDrop={(e) => {
-                                                            e.preventDefault();
-                                                            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-                                                            onReorderItems(section, fromIdx, idx);
-                                                        }}
-                                                        onClick={() => onEdit(item)}
-                                                        className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''}`}
-                                                    >
-                                                        <div className="flex items-center flex-1 min-w-0 pr-3">
-                                                            <IconGrip />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
-                                                                        {item.name}
-                                                                    </h4>
-                                                                    {item.qty <= item.threshold && (
-                                                                        <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
+                                                sectionItems.map((item, idx) => {
+                                                    const isBeingDragged = draggingItem && draggingItem.section === section && draggingItem.index === idx;
+
+                                                    return (
+                                                        <div 
+                                                            key={item.id}
+                                                            data-item-index={idx}
+                                                            onPointerDown={(e) => handlePointerDown(e, section, idx)}
+                                                            onPointerMove={(e) => handlePointerMove(e, section)}
+                                                            onPointerUp={(e) => handlePointerUp(e, section, sectionItems)}
+                                                            onClick={() => onEdit(item)}
+                                                            className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''} ${isBeingDragged ? 'opacity-50 scale-[1.02] shadow-lg border-japandi-sage bg-white z-30' : ''}`}
+                                                        >
+                                                            <div className="flex items-center flex-1 min-w-0 pr-3">
+                                                                <div 
+                                                                    className="p-1 -ml-1 text-japandi-muted hover:text-japandi-text touch-grab select-none"
+                                                                    title="Hold and drag to reorder"
+                                                                >
+                                                                    <IconGrip />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
+                                                                            {item.name}
+                                                                        </h4>
+                                                                        {item.qty <= item.threshold && (
+                                                                            <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
+                                                                    {item.notes && (
+                                                                        <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
-                                                                {item.notes && (
-                                                                    <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
-                                                                )}
                                                             </div>
-                                                        </div>
 
-                                                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                                                            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-japandi-border/80 shadow-sm">
+                                                            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                                                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-japandi-border/80 shadow-sm">
+                                                                    <button 
+                                                                        onClick={() => updateQty(item.id, -1)}
+                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-muted hover:text-japandi-text active:scale-95"
+                                                                    >
+                                                                        <IconMinus />
+                                                                    </button>
+                                                                    <span className="w-6 text-center font-normal text-xs text-japandi-text">{item.qty}</span>
+                                                                    <button 
+                                                                        onClick={() => updateQty(item.id, 1)}
+                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-sage hover:text-[#758472] active:scale-95"
+                                                                    >
+                                                                        <IconPlus />
+                                                                    </button>
+                                                                </div>
                                                                 <button 
-                                                                    onClick={() => updateQty(item.id, -1)}
-                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-muted hover:text-japandi-text active:scale-95"
+                                                                    onClick={() => deleteItem(item.id)}
+                                                                    className="text-japandi-muted hover:text-red-500 p-1 transition-colors"
+                                                                    title="Delete item"
                                                                 >
-                                                                    <IconMinus />
-                                                                </button>
-                                                                <span className="w-6 text-center font-normal text-xs text-japandi-text">{item.qty}</span>
-                                                                <button 
-                                                                    onClick={() => updateQty(item.id, 1)}
-                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-sage hover:text-[#758472] active:scale-95"
-                                                                >
-                                                                    <IconPlus />
+                                                                    <IconTrash />
                                                                 </button>
                                                             </div>
-                                                            <button 
-                                                                onClick={() => deleteItem(item.id)}
-                                                                className="text-japandi-muted hover:text-red-500 p-1 transition-colors"
-                                                                title="Delete item"
-                                                            >
-                                                                <IconTrash />
-                                                            </button>
                                                         </div>
-                                                    </div>
-                                                ))
+                                                    );
+                                                })
                                             )}
                                         </div>
                                     )}
@@ -980,7 +1024,7 @@
                         </div>
 
                         <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
-                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.25</p>
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.26</p>
                         </div>
                     </div>
                 </div>
