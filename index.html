@@ -80,14 +80,14 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- FIREBASE CONFIGURATION ---
-        // Replace these placeholder values with your actual Firebase project settings
-const firebaseConfig = {
-  apiKey: "AIzaSyARM7INioNJPClG9idtiR9pCdU_85CrvOQ",
-  authDomain: "wongs-house.firebaseapp.com",
-  projectId: "wongs-house",
-  storageBucket: "wongs-house.firebasestorage.app",
-  messagingSenderId: "878151358121",
-  appId: "1:878151358121:web:714d89dd25ba04a4b2bbb8"        };
+        const firebaseConfig = {
+            apiKey: "AIzaSyARM7INioNJPClG9idtiR9pCdU_85CrvOQ",
+            authDomain: "wongs-house.firebaseapp.com",
+            projectId: "wongs-house",
+            storageBucket: "wongs-house.firebasestorage.app",
+            messagingSenderId: "878151358121",
+            appId: "1:878151358121:web:714d89dd25ba04a4b2bbb8"       
+        };
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -124,8 +124,7 @@ const firebaseConfig = {
         const IconChevronDown = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
         const IconChevronRight = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7"/></svg>;
         const IconEdit = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
-        const IconArrowUp = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 15l7-7 7 7"/></svg>;
-        const IconArrowDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
+        const IconGrip = () => <svg className="w-4 h-4 text-japandi-muted/60 mr-2 flex-shrink-0 cursor-grab active:cursor-grabbing" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/></svg>;
 
         function App() {
             const [items, setItems] = useState(DEFAULT_ITEMS);
@@ -157,7 +156,6 @@ const firebaseConfig = {
                         if (data.sections) setSections(data.sections);
                         if (data.stores) setStores(data.stores);
                     } else {
-                        // Initialize cloud document if empty
                         docRef.set({
                             items: DEFAULT_ITEMS,
                             broadAreas: DEFAULT_BROAD_AREAS,
@@ -174,7 +172,6 @@ const firebaseConfig = {
                 return () => unsubscribe();
             }, []);
 
-            // Helper to sync full state to Firestore
             const syncToCloud = (updatedItems, updatedAreas, updatedSections, updatedStores) => {
                 db.collection("wongHouse").doc("mainData").set({
                     items: updatedItems !== undefined ? updatedItems : items,
@@ -259,7 +256,7 @@ const firebaseConfig = {
                         </div>
                         <button 
                             onClick={() => setMenuOpen(true)}
-                            className="p-2.5 bg-white border border-japandi-border rounded-xl text-japandi-text shadow-sm hover:bg-japandi-bg active:scale-95 transition-all"
+                            className="p-1 text-japandi-text hover:text-japandi-sage active:scale-95 transition-all"
                             title="Open Menu"
                         >
                             <IconMenu />
@@ -675,16 +672,25 @@ const firebaseConfig = {
                 }
             };
 
-            const handleMoveSection = (index, direction) => {
-                const currentList = [...(sections[selectedAreaForSections] || [])];
-                const targetIndex = direction === 'up' ? index - 1 : index + 1;
-                if (targetIndex < 0 || targetIndex >= currentList.length) return;
+            const handleDropItem = (fromIdx, toIdx) => {
+                if (fromIdx === toIdx || isNaN(fromIdx)) return;
 
-                const temp = currentList[index];
-                currentList[index] = currentList[targetIndex];
-                currentList[targetIndex] = temp;
-
-                setSections({ ...sections, [selectedAreaForSections]: currentList });
+                if (settingsTab === 'areas') {
+                    const updated = [...broadAreas];
+                    const [moved] = updated.splice(fromIdx, 1);
+                    updated.splice(toIdx, 0, moved);
+                    setBroadAreas(updated);
+                } else if (settingsTab === 'sections') {
+                    const currentList = [...(sections[selectedAreaForSections] || [])];
+                    const [moved] = currentList.splice(fromIdx, 1);
+                    currentList.splice(toIdx, 0, moved);
+                    setSections({ ...sections, [selectedAreaForSections]: currentList });
+                } else {
+                    const updated = [...stores];
+                    const [moved] = updated.splice(fromIdx, 1);
+                    updated.splice(toIdx, 0, moved);
+                    setStores(updated);
+                }
             };
 
             const handleSaveEdit = (oldVal) => {
@@ -759,7 +765,7 @@ const firebaseConfig = {
 
                         {settingsTab === 'sections' && (
                             <div className="p-3 bg-japandi-bg border-b border-japandi-border">
-                                <label className="block text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-1">Select Broad Area</label>
+                                <label className="block text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-1">Select area</label>
                                 <select 
                                     value={selectedAreaForSections}
                                     onChange={e => setSelectedAreaForSections(e.target.value)}
@@ -784,18 +790,28 @@ const firebaseConfig = {
                                 </button>
                             </form>
 
-                            <div className="space-y-2 mt-2">
+                            <div className="space-y-2 mt-1">
                                 {settingsTab === 'areas' && broadAreas.map((item, idx) => (
-                                    <div key={item} className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
-                                        {editingIndex === idx ? (
-                                            <div className="flex gap-2 flex-1 mr-2">
-                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
-                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
-                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
-                                            </div>
-                                        ) : (
-                                            <span className="font-normal text-sm text-japandi-text">{item}</span>
-                                        )}
+                                    <div 
+                                        key={item} 
+                                        draggable
+                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
+                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                    >
+                                        <div className="flex items-center flex-1 mr-2 min-w-0">
+                                            <IconGrip />
+                                            {editingIndex === idx ? (
+                                                <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                                                    <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                    <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                    <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                                </div>
+                                            ) : (
+                                                <span className="font-normal text-sm text-japandi-text truncate">{item}</span>
+                                            )}
+                                        </div>
                                         {editingIndex !== idx && (
                                             <div className="flex items-center gap-1">
                                                 <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
@@ -805,22 +821,30 @@ const firebaseConfig = {
                                     </div>
                                 ))}
 
-                                {settingsTab === 'sections' && (sections[selectedAreaForSections] || []).map((item, idx, arr) => (
-                                    <div key={item} className="p-2.5 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
-                                        {editingIndex === idx ? (
-                                            <div className="flex gap-2 flex-1 mr-2">
-                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
-                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
-                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
-                                            </div>
-                                        ) : (
-                                            <span className="font-normal text-xs text-japandi-text">{item}</span>
-                                        )}
+                                {settingsTab === 'sections' && (sections[selectedAreaForSections] || []).map((item, idx) => (
+                                    <div 
+                                        key={item} 
+                                        draggable
+                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
+                                        className="p-2.5 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                    >
+                                        <div className="flex items-center flex-1 mr-2 min-w-0">
+                                            <IconGrip />
+                                            {editingIndex === idx ? (
+                                                <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                                                    <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                    <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                    <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                                </div>
+                                            ) : (
+                                                <span className="font-normal text-xs text-japandi-text truncate">{item}</span>
+                                            )}
+                                        </div>
 
                                         {editingIndex !== idx && (
-                                            <div className="flex items-center gap-0.5">
-                                                <button onClick={() => handleMoveSection(idx, 'up')} disabled={idx === 0} className="p-1 text-japandi-muted hover:text-japandi-text disabled:opacity-30" title="Move Up"><IconArrowUp /></button>
-                                                <button onClick={() => handleMoveSection(idx, 'down')} disabled={idx === arr.length - 1} className="p-1 text-japandi-muted hover:text-japandi-text disabled:opacity-30" title="Move Down"><IconArrowDown /></button>
+                                            <div className="flex items-center gap-1">
                                                 <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
                                                 <button onClick={() => handleDelete(item)} className="p-1 text-japandi-muted hover:text-red-500"><IconTrash /></button>
                                             </div>
@@ -829,16 +853,26 @@ const firebaseConfig = {
                                 ))}
 
                                 {settingsTab === 'stores' && stores.map((item, idx) => (
-                                    <div key={item} className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between">
-                                        {editingIndex === idx ? (
-                                            <div className="flex gap-2 flex-1 mr-2">
-                                                <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
-                                                <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
-                                                <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
-                                            </div>
-                                        ) : (
-                                            <span className="font-normal text-sm text-japandi-text">{item}</span>
-                                        )}
+                                    <div 
+                                        key={item} 
+                                        draggable
+                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
+                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                    >
+                                        <div className="flex items-center flex-1 mr-2 min-w-0">
+                                            <IconGrip />
+                                            {editingIndex === idx ? (
+                                                <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                                                    <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
+                                                    <button onClick={() => handleSaveEdit(item)} className="px-2 bg-japandi-sage text-white text-xs rounded">Save</button>
+                                                    <button onClick={() => setEditingIndex(null)} className="text-xs text-japandi-muted">Cancel</button>
+                                                </div>
+                                            ) : (
+                                                <span className="font-normal text-sm text-japandi-text truncate">{item}</span>
+                                            )}
+                                        </div>
                                         {editingIndex !== idx && (
                                             <div className="flex items-center gap-1">
                                                 <button onClick={() => { setEditingIndex(idx); setEditVal(item); }} className="p-1 text-japandi-muted hover:text-japandi-text"><IconEdit /></button>
@@ -851,7 +885,7 @@ const firebaseConfig = {
                         </div>
 
                         <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
-                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.6</p>
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.8</p>
                         </div>
                     </div>
                 </div>
