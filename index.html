@@ -46,6 +46,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
+    <!-- SortableJS CDN for Butter-Smooth Mobile/Desktop Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <!-- HTML5 QRCode Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -73,7 +76,9 @@
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        .touch-grab { touch-action: none; }
+        /* Sortable ghost styling */
+        .sortable-ghost { opacity: 0.4; background: #ded8cc !important; }
+        .sortable-drag { opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -141,7 +146,7 @@
         const IconChevronDown = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7"/></svg>;
         const IconChevronRight = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7"/></svg>;
         const IconEdit = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
-        const IconGrip = () => <svg className="w-5 h-5 text-japandi-muted/70 mr-1.5 flex-shrink-0 cursor-grab active:cursor-grabbing touch-grab" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/></svg>;
+        const IconGrip = () => <svg className="w-5 h-5 text-japandi-muted/70 mr-1.5 flex-shrink-0 cursor-grab active:cursor-grabbing" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16"/></svg>;
 
         // --- Sub-components ---
         function MealPlanningView({ meals, items, stores, onAddMeal, onEditMeal, onDeleteMeal, onAddMultipleQuickItems }) {
@@ -565,7 +570,6 @@
 
         function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse, onReorderItems }) {
             const [search, setSearch] = useState('');
-            const [draggingItem, setDraggingItem] = useState(null);
 
             const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === broadArea);
             const filtered = areaItems.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
@@ -582,38 +586,34 @@
 
             const activeSectionsList = Object.keys(grouped);
 
-            const handlePointerDown = (e, sectionName, idx) => {
-                e.stopPropagation();
-                const target = e.currentTarget;
-                target.setPointerCapture(e.pointerId);
-                setDraggingItem({ section: sectionName, index: idx, startY: e.clientY, currentY: e.clientY });
-            };
+            // Bind SortableJS to each section list
+            useEffect(() => {
+                if (search) return; // Disable drag during active search filtering
+                const containers = document.querySelectorAll('.sortable-section-list');
+                const instances = [];
 
-            const handlePointerMove = (e, sectionName) => {
-                if (!draggingItem || draggingItem.section !== sectionName) return;
-                e.preventDefault();
-                setDraggingItem(prev => ({ ...prev, currentY: e.clientY }));
-            };
+                containers.forEach(container => {
+                    const sectionName = container.getAttribute('data-section-name');
+                    const sortable = Sortable.create(container, {
+                        handle: '.cursor-grab',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        dragClass: 'sortable-drag',
+                        onEnd: (evt) => {
+                            const oldIndex = evt.oldIndex;
+                            const newIndex = evt.newIndex;
+                            if (oldIndex !== newIndex && !isNaN(oldIndex) && !isNaN(newIndex)) {
+                                onReorderItems(sectionName, oldIndex, newIndex);
+                            }
+                        }
+                    });
+                    instances.push(sortable);
+                });
 
-            const handlePointerUp = (e, sectionName, itemsList) => {
-                if (!draggingItem || draggingItem.section !== sectionName) return;
-                e.stopPropagation();
-                
-                try {
-                    e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch (err) {}
-
-                const elem = document.elementFromPoint(e.clientX, e.clientY);
-                const rowElem = elem ? elem.closest('[data-item-index]') : null;
-                
-                if (rowElem) {
-                    const targetIdx = parseInt(rowElem.getAttribute('data-item-index'));
-                    if (!isNaN(targetIdx) && targetIdx !== draggingItem.index) {
-                        onReorderItems(sectionName, draggingItem.index, targetIdx);
-                    }
-                }
-                setDraggingItem(null);
-            };
+                return () => {
+                    instances.forEach(inst => inst.destroy());
+                };
+            }, [sections, items, search, broadArea]);
 
             return (
                 <div className="space-y-4 pb-12">
@@ -667,73 +667,65 @@
                                     </div>
 
                                     {!isCollapsed && (
-                                        <div className="px-4 pb-4 pt-1 border-t border-japandi-border/40 space-y-2.5">
+                                        <div data-section-name={section} className="sortable-section-list px-4 pb-4 pt-1 border-t border-japandi-border/40 space-y-2.5">
                                             {sectionItems.length === 0 ? (
                                                 <p className="text-xs text-japandi-muted italic py-3 text-center">No items in this section.</p>
                                             ) : (
-                                                sectionItems.map((item, idx) => {
-                                                    const isBeingDragged = draggingItem && draggingItem.section === section && draggingItem.index === idx;
-
-                                                    return (
-                                                        <div 
-                                                            key={item.id}
-                                                            data-item-index={idx}
-                                                            onPointerDown={(e) => handlePointerDown(e, section, idx)}
-                                                            onPointerMove={(e) => handlePointerMove(e, section)}
-                                                            onPointerUp={(e) => handlePointerUp(e, section, sectionItems)}
-                                                            onClick={() => onEdit(item)}
-                                                            className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''} ${isBeingDragged ? 'opacity-50 scale-[1.02] shadow-lg border-japandi-sage bg-white z-30' : ''}`}
-                                                        >
-                                                            <div className="flex items-center flex-1 min-w-0 pr-3">
-                                                                <div 
-                                                                    className="p-1 -ml-1 text-japandi-muted hover:text-japandi-text touch-grab select-none"
-                                                                    title="Hold and drag to reorder"
-                                                                >
-                                                                    <IconGrip />
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
-                                                                            {item.name}
-                                                                        </h4>
-                                                                        {item.qty <= item.threshold && (
-                                                                            <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
-                                                                    {item.notes && (
-                                                                        <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
+                                                sectionItems.map((item) => (
+                                                    <div 
+                                                        key={item.id}
+                                                        onClick={() => onEdit(item)}
+                                                        className={`p-3 rounded-lg bg-japandi-bg/60 border border-japandi-border/60 flex items-center justify-between cursor-pointer hover:bg-japandi-bg transition-all ${item.qty === 0 ? 'opacity-60' : ''}`}
+                                                    >
+                                                        <div className="flex items-center flex-1 min-w-0 pr-3">
+                                                            <div 
+                                                                className="p-1 -ml-1 text-japandi-muted hover:text-japandi-text cursor-grab active:cursor-grabbing select-none"
+                                                                title="Hold and drag to reorder"
+                                                            >
+                                                                <IconGrip />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h4 className={`font-normal text-sm text-japandi-text truncate ${item.qty === 0 ? 'line-through decoration-japandi-muted/50' : ''}`}>
+                                                                        {item.name}
+                                                                    </h4>
+                                                                    {item.qty <= item.threshold && (
+                                                                        <span className="text-[9px] font-medium text-japandi-burgundy tracking-wide bg-japandi-burgundy/10 px-1.5 py-0.5 rounded">Low</span>
                                                                     )}
                                                                 </div>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                                                                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-japandi-border/80 shadow-sm">
-                                                                    <button 
-                                                                        onClick={() => updateQty(item.id, -1)}
-                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-muted hover:text-japandi-text active:scale-95"
-                                                                    >
-                                                                        <IconMinus />
-                                                                    </button>
-                                                                    <span className="w-6 text-center font-normal text-xs text-japandi-text">{item.qty}</span>
-                                                                    <button 
-                                                                        onClick={() => updateQty(item.id, 1)}
-                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-sage hover:text-[#758472] active:scale-95"
-                                                                    >
-                                                                        <IconPlus />
-                                                                    </button>
-                                                                </div>
-                                                                <button 
-                                                                    onClick={() => deleteItem(item.id)}
-                                                                    className="text-japandi-muted hover:text-red-500 p-1 transition-colors"
-                                                                    title="Delete item"
-                                                                >
-                                                                    <IconTrash />
-                                                                </button>
+                                                                <p className="text-[11px] text-japandi-muted mt-0.5">{item.store || 'Any Store'}</p>
+                                                                {item.notes && (
+                                                                    <p className="text-[10px] text-japandi-muted/80 truncate mt-0.5 italic">{item.notes}</p>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                    );
-                                                })
+
+                                                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                                            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-japandi-border/80 shadow-sm">
+                                                                <button 
+                                                                    onClick={() => updateQty(item.id, -1)}
+                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-muted hover:text-japandi-text active:scale-95"
+                                                                >
+                                                                    <IconMinus />
+                                                                </button>
+                                                                <span className="w-6 text-center font-normal text-xs text-japandi-text">{item.qty}</span>
+                                                                <button 
+                                                                    onClick={() => updateQty(item.id, 1)}
+                                                                    className="w-6 h-6 flex items-center justify-center rounded bg-japandi-bg text-japandi-sage hover:text-[#758472] active:scale-95"
+                                                                >
+                                                                    <IconPlus />
+                                                                </button>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => deleteItem(item.id)}
+                                                                className="text-japandi-muted hover:text-red-500 p-1 transition-colors"
+                                                                title="Delete item"
+                                                            >
+                                                                <IconTrash />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
                                     )}
@@ -745,11 +737,51 @@
             );
         }
 
-        function MenuDrawer({ onClose, broadAreas, sections, stores, onUpdateSettings, settingsTab, setSettingsTab, onNavigateArea }) {
+        function MenuDrawer({ onClose, broadAreas, sections, stores, onUpdateSettings, settingsTab, setSettingsTab, onNavigateArea, onExportData, onImportData }) {
             const [selectedAreaForSections, setSelectedAreaForSections] = useState(broadAreas[0]);
             const [newVal, setNewVal] = useState('');
             const [editingIndex, setEditingIndex] = useState(null);
             const [editVal, setEditVal] = useState('');
+            const fileInputRef = useRef(null);
+            const settingsListRef = useRef(null);
+
+            // Bind SortableJS to settings lists (areas, sections, stores)
+            useEffect(() => {
+                const el = settingsListRef.current;
+                if (!el) return;
+
+                const sortable = Sortable.create(el, {
+                    handle: '.cursor-grab',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag',
+                    onEnd: (evt) => {
+                        const fromIdx = evt.oldIndex;
+                        const toIdx = evt.newIndex;
+                        if (fromIdx !== toIdx && !isNaN(fromIdx) && !isNaN(toIdx)) {
+                            if (settingsTab === 'areas') {
+                                const updated = [...broadAreas];
+                                const [moved] = updated.splice(fromIdx, 1);
+                                updated.splice(toIdx, 0, moved);
+                                onUpdateSettings(updated, undefined, undefined);
+                            } else if (settingsTab === 'sections') {
+                                const currentList = [...(sections[selectedAreaForSections] || [])];
+                                const [moved] = currentList.splice(fromIdx, 1);
+                                currentList.splice(toIdx, 0, moved);
+                                const updatedSections = { ...sections, [selectedAreaForSections]: currentList };
+                                onUpdateSettings(undefined, updatedSections, undefined);
+                            } else {
+                                const updated = [...stores];
+                                const [moved] = updated.splice(fromIdx, 1);
+                                updated.splice(toIdx, 0, moved);
+                                onUpdateSettings(undefined, undefined, updated);
+                            }
+                        }
+                    }
+                });
+
+                return () => sortable.destroy();
+            }, [settingsTab, broadAreas, sections, stores, selectedAreaForSections]);
 
             const handleAdd = (e) => {
                 e.preventDefault();
@@ -806,28 +838,6 @@
                 }
             };
 
-            const handleDropItem = (fromIdx, toIdx) => {
-                if (fromIdx === toIdx || isNaN(fromIdx)) return;
-
-                if (settingsTab === 'areas') {
-                    const updated = [...broadAreas];
-                    const [moved] = updated.splice(fromIdx, 1);
-                    updated.splice(toIdx, 0, moved);
-                    onUpdateSettings(updated, undefined, undefined);
-                } else if (settingsTab === 'sections') {
-                    const currentList = [...(sections[selectedAreaForSections] || [])];
-                    const [moved] = currentList.splice(fromIdx, 1);
-                    currentList.splice(toIdx, 0, moved);
-                    const updatedSections = { ...sections, [selectedAreaForSections]: currentList };
-                    onUpdateSettings(undefined, updatedSections, undefined);
-                } else {
-                    const updated = [...stores];
-                    const [moved] = updated.splice(fromIdx, 1);
-                    updated.splice(toIdx, 0, moved);
-                    onUpdateSettings(undefined, undefined, updated);
-                }
-            };
-
             const handleSaveEdit = (oldVal) => {
                 const trimmed = editVal.trim();
                 if (!trimmed) return;
@@ -854,6 +864,22 @@
                 setEditVal('');
             };
 
+            const handleFileChange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        onImportData(parsed);
+                        alert('Data successfully restored from backup file!');
+                    } catch (err) {
+                        alert('Invalid backup file format.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
             return (
                 <div className="fixed inset-0 bg-japandi-text/30 backdrop-blur-sm z-50 flex justify-end" onClick={onClose}>
                     <div className="bg-white w-full max-w-xs h-full shadow-2xl flex flex-col animate-slide-right pb-safe-area" onClick={e => e.stopPropagation()}>
@@ -864,18 +890,39 @@
                             </button>
                         </div>
 
-                        <div className="p-4 border-b border-japandi-border bg-white">
-                            <p className="text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-2">Quick Jump to Area</p>
-                            <div className="flex flex-wrap gap-1.5">
-                                {broadAreas.map(area => (
+                        <div className="p-4 border-b border-japandi-border bg-white space-y-3">
+                            <div>
+                                <p className="text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-2">Data Backup & Safety</p>
+                                <div className="flex gap-2">
                                     <button 
-                                        key={area}
-                                        onClick={() => onNavigateArea(area)}
-                                        className="text-xs font-normal bg-japandi-bg px-2.5 py-1.5 rounded-lg border border-japandi-border hover:bg-japandi-sage hover:text-white transition-all"
+                                        onClick={onExportData}
+                                        className="flex-1 py-2 bg-japandi-sage text-white text-xs font-medium rounded-xl shadow-sm hover:bg-[#758472]"
                                     >
-                                        {area}
+                                        Export Backup
                                     </button>
-                                ))}
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="flex-1 py-2 bg-japandi-bg border border-japandi-border text-japandi-text text-xs font-medium rounded-xl hover:bg-japandi-border/60"
+                                    >
+                                        Restore Backup
+                                    </button>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <p className="text-[10px] font-medium text-japandi-muted uppercase tracking-wider mb-2">Quick Jump to Area</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {broadAreas.map(area => (
+                                        <button 
+                                            key={area}
+                                            onClick={() => onNavigateArea(area)}
+                                            className="text-xs font-normal bg-japandi-bg px-2.5 py-1.5 rounded-lg border border-japandi-border hover:bg-japandi-sage hover:text-white transition-all"
+                                        >
+                                            {area}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -927,18 +974,16 @@
                                 </button>
                             </form>
 
-                            <div className="space-y-2 mt-1">
+                            <div ref={settingsListRef} className="space-y-2 mt-1">
                                 {settingsTab === 'areas' && broadAreas.map((item, idx) => (
                                     <div 
                                         key={item} 
-                                        draggable
-                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
-                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between hover:bg-japandi-bg transition-colors"
                                     >
                                         <div className="flex items-center flex-1 mr-2 min-w-0">
-                                            <IconGrip />
+                                            <div className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-japandi-muted hover:text-japandi-text select-none">
+                                                <IconGrip />
+                                            </div>
                                             {editingIndex === idx ? (
                                                 <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
                                                     <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
@@ -961,14 +1006,12 @@
                                 {settingsTab === 'sections' && (sections[selectedAreaForSections] || []).map((item, idx) => (
                                     <div 
                                         key={item} 
-                                        draggable
-                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
-                                        className="p-2.5 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                        className="p-2.5 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between hover:bg-japandi-bg transition-colors"
                                     >
                                         <div className="flex items-center flex-1 mr-2 min-w-0">
-                                            <IconGrip />
+                                            <div className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-japandi-muted hover:text-japandi-text select-none">
+                                                <IconGrip />
+                                            </div>
                                             {editingIndex === idx ? (
                                                 <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
                                                     <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
@@ -992,14 +1035,12 @@
                                 {settingsTab === 'stores' && stores.map((item, idx) => (
                                     <div 
                                         key={item} 
-                                        draggable
-                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', idx)}
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={(e) => { e.preventDefault(); handleDropItem(parseInt(e.dataTransfer.getData('text/plain')), idx); }}
-                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-japandi-bg transition-colors"
+                                        className="p-3 bg-japandi-bg/50 border border-japandi-border rounded-xl flex items-center justify-between hover:bg-japandi-bg transition-colors"
                                     >
                                         <div className="flex items-center flex-1 mr-2 min-w-0">
-                                            <IconGrip />
+                                            <div className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-japandi-muted hover:text-japandi-text select-none">
+                                                <IconGrip />
+                                            </div>
                                             {editingIndex === idx ? (
                                                 <div className="flex gap-2 flex-1" onClick={e => e.stopPropagation()}>
                                                     <input type="text" autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 p-1 text-sm bg-white border rounded" />
@@ -1022,7 +1063,7 @@
                         </div>
 
                         <div className="p-4 border-t border-japandi-border bg-japandi-bg text-center">
-                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.26</p>
+                            <p className="text-[11px] text-japandi-muted font-normal">Wong's House Cloud v2.28</p>
                         </div>
                     </div>
                 </div>
@@ -1300,11 +1341,26 @@
 
         // --- Main App Component ---
         function App() {
-            const [items, setItems] = useState(DEFAULT_ITEMS);
-            const [broadAreas, setBroadAreas] = useState(DEFAULT_BROAD_AREAS);
-            const [sections, setSections] = useState(DEFAULT_SECTIONS_MAP);
-            const [stores, setStores] = useState(DEFAULT_STORES);
-            const [meals, setMeals] = useState(DEFAULT_MEALS);
+            const [items, setItems] = useState(() => {
+                const saved = localStorage.getItem('wongs_house_items');
+                return saved ? JSON.parse(saved) : DEFAULT_ITEMS;
+            });
+            const [broadAreas, setBroadAreas] = useState(() => {
+                const saved = localStorage.getItem('wongs_house_areas');
+                return saved ? JSON.parse(saved) : DEFAULT_BROAD_AREAS;
+            });
+            const [sections, setSections] = useState(() => {
+                const saved = localStorage.getItem('wongs_house_sections');
+                return saved ? JSON.parse(saved) : DEFAULT_SECTIONS_MAP;
+            });
+            const [stores, setStores] = useState(() => {
+                const saved = localStorage.getItem('wongs_house_stores');
+                return saved ? JSON.parse(saved) : DEFAULT_STORES;
+            });
+            const [meals, setMeals] = useState(() => {
+                const saved = localStorage.getItem('wongs_house_meals');
+                return saved ? JSON.parse(saved) : DEFAULT_MEALS;
+            });
             const [isLoaded, setIsLoaded] = useState(false);
 
             const [activeTab, setActiveTab] = useState('home');
@@ -1319,7 +1375,16 @@
             const [collapsedSections, setCollapsedSections] = useState({});
             const [collapsedStores, setCollapsedStores] = useState({});
 
-            // Real-time Firestore Listener
+            // Save to LocalStorage instantly on change
+            useEffect(() => {
+                localStorage.setItem('wongs_house_items', JSON.stringify(items));
+                localStorage.setItem('wongs_house_areas', JSON.stringify(broadAreas));
+                localStorage.setItem('wongs_house_sections', JSON.stringify(sections));
+                localStorage.setItem('wongs_house_stores', JSON.stringify(stores));
+                localStorage.setItem('wongs_house_meals', JSON.stringify(meals));
+            }, [items, broadAreas, sections, stores, meals]);
+
+            // Real-time Firestore Listener & Cloud Sync
             useEffect(() => {
                 const docRef = db.collection("wongHouse").doc("mainData");
                 
@@ -1333,16 +1398,16 @@
                         if (data.meals) setMeals(data.meals);
                     } else {
                         docRef.set({
-                            items: DEFAULT_ITEMS,
-                            broadAreas: DEFAULT_BROAD_AREAS,
-                            sections: DEFAULT_SECTIONS_MAP,
-                            stores: DEFAULT_STORES,
-                            meals: DEFAULT_MEALS
+                            items,
+                            broadAreas,
+                            sections,
+                            stores,
+                            meals
                         });
                     }
                     setIsLoaded(true);
                 }, (error) => {
-                    console.error("Cloud sync error:", error);
+                    console.error("Cloud sync error (using local cache):", error);
                     setIsLoaded(true);
                 });
 
@@ -1359,6 +1424,26 @@
                 }).catch(err => console.error("Error saving to cloud:", err));
             };
 
+            const handleExportData = () => {
+                const backupData = { items, broadAreas, sections, stores, meals, exportedAt: new Date().toISOString() };
+                const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `wongs-house-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const handleImportData = (data) => {
+                if (data.items) setItems(data.items);
+                if (data.broadAreas) setBroadAreas(data.broadAreas);
+                if (data.sections) setSections(data.sections);
+                if (data.stores) setStores(data.stores);
+                if (data.meals) setMeals(data.meals);
+                syncToCloud(data.items, data.broadAreas, data.sections, data.stores, data.meals);
+            };
+
             const handleUpdateSettings = (newAreas, newSections, newStores) => {
                 const nextAreas = newAreas !== undefined ? newAreas : broadAreas;
                 const nextSections = newSections !== undefined ? newSections : sections;
@@ -1367,14 +1452,7 @@
                 setBroadAreas(nextAreas);
                 setSections(nextSections);
                 setStores(nextStores);
-
-                db.collection("wongHouse").doc("mainData").set({
-                    items,
-                    broadAreas: nextAreas,
-                    sections: nextSections,
-                    stores: nextStores,
-                    meals
-                }).catch(err => console.error("Error saving to cloud:", err));
+                syncToCloud(undefined, nextAreas, nextSections, nextStores, undefined);
             };
 
             const updateQty = (id, delta) => {
@@ -1645,6 +1723,8 @@
                             settingsTab={settingsTab}
                             setSettingsTab={setSettingsTab}
                             onNavigateArea={(area) => { setActiveTab('home'); setSelectedBroadArea(area); setMenuOpen(false); }}
+                            onExportData={handleExportData}
+                            onImportData={handleImportData}
                         />
                     )}
 
