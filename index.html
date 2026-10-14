@@ -565,7 +565,7 @@
 
         function BroadAreaDetailView({ broadArea, sections, items, onBack, updateQty, deleteItem, onEdit, collapsedSections, toggleSectionCollapse, onReorderItems }) {
             const [search, setSearch] = useState('');
-            const [draggingItem, setDraggingItem] = useState(null); // { section, index }
+            const [draggingItem, setDraggingItem] = useState(null);
 
             const areaItems = items.filter(i => (i.broadArea || 'Kitchen') === broadArea);
             const filtered = areaItems.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
@@ -582,7 +582,6 @@
 
             const activeSectionsList = Object.keys(grouped);
 
-            // Pointer Event Handlers for Touch & Mouse Drag
             const handlePointerDown = (e, sectionName, idx) => {
                 e.stopPropagation();
                 const target = e.currentTarget;
@@ -604,7 +603,6 @@
                     e.currentTarget.releasePointerCapture(e.pointerId);
                 } catch (err) {}
 
-                // Find element under pointer
                 const elem = document.elementFromPoint(e.clientX, e.clientY);
                 const rowElem = elem ? elem.closest('[data-item-index]') : null;
                 
